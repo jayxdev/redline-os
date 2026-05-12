@@ -36,8 +36,13 @@ class BaseRepository(Generic[T]):
             
         return [self.model_class(**doc) for doc in cursor]
 
-    def update(self, id_val: str, updates: Dict[str, Any], id_field: str = "id") -> bool:
-        result = self.collection.update_one({id_field: id_val}, {"$set": updates})
+    def update(self, id_val: str, updates: Any, id_field: str = "id") -> bool:
+        if isinstance(updates, BaseModel):
+            data = updates.model_dump()
+        else:
+            data = updates
+            
+        result = self.collection.update_one({id_field: id_val}, {"$set": data})
         return result.modified_count > 0
 
     def delete(self, id_val: str, id_field: str = "id") -> bool:
