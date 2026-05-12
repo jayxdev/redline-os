@@ -1,3 +1,4 @@
+import streamlit as st
 from redline.utils.auth import check_password
 
 if not check_password():
@@ -7,40 +8,44 @@ st.title("🎬 VIDEOS")
 st.caption("Active Production Pipeline")
 
 video_repo = BaseRepository("videos", Video)
-
-# Filters
-col_f1, col_f2 = st.columns(2)
-status_filter = col_f1.selectbox("Filter by Status", ["All", "drafted", "planned", "published"])
-search_query = col_f2.text_input("Search Videos", "")
-
-# Load data
-filters = {}
-if status_filter != "All":
-    filters["status"] = status_filter
-if search_query:
-    filters["title"] = {"$regex": search_query, "$options": "i"}
-
-videos = video_repo.list(filters=filters, sort=[("created_at", -1)])
+videos = video_repo.list(sort=[("created_at", -1)])
 
 if not videos:
-    st.info("No videos found in this queue.")
+    st.info("No build packages found. Approve some ideas to start the engine!")
 else:
-    for v in videos:
+    # Categorize
+    finalized = [v for v in videos if v.status in ["drafted", "published"]]
+    in_build = [v for v in videos if v.status == "planned"]
+    
+    st.markdown(f"### ✅ FINALIZED PACKAGES ({len(finalized)})")
+    for v in finalized:
         with st.container(border=True):
-            c1, c2, c3 = st.columns([3, 1, 1])
-            c1.markdown(f"### {v.title}")
-            c2.markdown(f"**Status:** `{v.status.upper()}`")
-            
-            if c3.button("View Details", key=f"view_{v.id}", use_container_width=True):
+            c1, c2 = st.columns([4, 1])
+            c1.markdown(f"#### {v.title.upper()}")
+            if c2.button("DETAILS", key=f"v_{v.id}", use_container_width=True):
                 st.session_state.selected_video = v.id
                 st.switch_page("pages/03_video_planner.py")
             
-            # Preview of the plan if available
-            if v.plan:
-                with st.expander("📝 Quick Look: Video Plan"):
-                    st.write(f"**Angle:** {v.plan.angle}")
-                    st.write(v.plan.script_outline[:200] + "...")
+            st.caption(f"Status: `{v.status.upper()}` | Built: {v.created_at.strftime('%Y-%m-%d')}")
             
-            if v.post_package:
-                 with st.expander("📦 Quick Look: Social Package"):
-                    st.write(v.post_package.packaging_notes[:200] + "...")
+            with st.expander("📦 VIEW BUILD PACKAGE"):
+                tab1, tab2 = st.tabs(["SCRIPT & PLAN", "SOCIAL PACKAGE"])
+                with tab1:
+                    if v.plan:
+                        st.markdown(f"**ANGLE:** {v.plan.angle}")
+                        st.markdown(v.plan.script_outline)
+                    else:
+                        st.warning("No plan data found.")
+                with tab2:
+                    if v.post_package:
+                        st.markdown(v.post_package.packaging_notes)
+                    else:
+                        st.warning("Social package not built yet.")
+
+    if in_build:
+        st.divider()
+        st.markdown(f"### ⏳ IN-BUILD ({len(in_build)})")
+        for v in in_build:
+            with st.container(border=True):
+                st.markdown(f"**{v.title.upper()}**")
+                st.caption(f"Status: `PLANNING` | Pipeline active...")

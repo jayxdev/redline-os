@@ -186,7 +186,7 @@ pg_admin = st.Page("pages/09_admin.py", title="ADMIN SETTINGS", icon="⚙️")
 # 2. Run Navigation
 pg = st.navigation({
     "MAIN": [pg_dashboard],
-    "CONTENT ENGINE": [pg_videos, pg_ideas, pg_planner, pg_packaging],
+    "CONTENT ENGINE": [pg_ideas, pg_planner, pg_packaging, pg_videos],
     "INTELLIGENCE": [pg_review, pg_patterns],
     "SYSTEM": [pg_logger, pg_history, pg_admin]
 })
