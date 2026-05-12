@@ -22,15 +22,17 @@ if not job:
     st.stop()
 
 st.success(f"Triggering job: {job}")
-
-# Placeholder for job execution logic
-# 1. Acquire lock
-# 2. Start job run record
-# 3. Execute steps
-# 4. Notify via Telegram
-# 5. Update record
-
-st.info(f"Execution logic for '{job}' will be implemented in Phase 4.")
+if job == "daily":
+    from core.automation_service import AutomationService
+    auto_service = AutomationService()
+    with st.spinner("Running Daily Pipeline..."):
+        success = auto_service.run_daily_pipeline(trigger_type="page_trigger")
+        if success:
+            st.success("Job completed successfully!")
+        else:
+            st.error("Job failed. Check logs.")
+else:
+    st.warning(f"Unknown job: {job}")
 
 # Telegram Notification Test
 if st.button("Send Test Notification"):

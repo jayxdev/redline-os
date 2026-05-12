@@ -163,4 +163,12 @@ else:
 # Footer Quick Actions
 st.markdown("---")
 if st.button("🚀 Manually Trigger Daily Pipeline", use_container_width=True):
-    st.toast("Daily pipeline started...")
+    from core.automation_service import AutomationService
+    auto_service = AutomationService()
+    with st.spinner("Executing Pipeline..."):
+        success = auto_service.run_daily_pipeline(trigger_type="manual")
+        if success:
+            st.success("Daily pipeline completed! Check the logs above.")
+            st.rerun()
+        else:
+            st.error("Pipeline failed. Check system logs.")
