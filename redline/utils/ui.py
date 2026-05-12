@@ -89,6 +89,11 @@ def run_autonomous_agents_ui(idea):
                 return match.group(1).strip() if match else default
 
             caption = extract_caption_field(r"(?:primary_caption|Caption)", "See packaging notes.")
+            var1 = extract_caption_field(r"caption_variant_1", "")
+            var2 = extract_caption_field(r"caption_variant_2", "")
+            
+            caption_opts = [c for c in [caption, var1, var2] if c]
+            
             hashtags_str = extract_caption_field(r"(?:hashtag_set|Hashtags used)", "")
             hashtags = [h.strip() for h in hashtags_str.replace('\n', ' ').split() if h.strip().startswith('#')]
             if not hashtags and hashtags_str:
@@ -104,6 +109,7 @@ def run_autonomous_agents_ui(idea):
                 plan=plan,
                 post_package=PostPackage(
                     selected_caption=caption,
+                    caption_options=caption_opts,
                     hashtags=hashtags,
                     packaging_notes=full_response
                 )

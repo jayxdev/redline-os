@@ -47,9 +47,15 @@ else:
                         st.warning("No plan data found.")
                 with tab2:
                     if v.post_package:
-                        if v.post_package.selected_caption:
-                            st.markdown("**CAPTION**")
-                            st.code(v.post_package.selected_caption, language="markdown")
+                        options = v.post_package.caption_options
+                        if not options and v.post_package.selected_caption:
+                            options = [v.post_package.selected_caption]
+                            
+                        if options:
+                            st.markdown("**CAPTION OPTIONS**")
+                            for idx, opt in enumerate(options):
+                                st.code(opt, language="markdown")
+                                
                         if v.post_package.hashtags:
                             st.markdown("**HASHTAGS**")
                             st.code(" ".join(v.post_package.hashtags), language="markdown")
