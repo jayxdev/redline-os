@@ -1,13 +1,13 @@
 import streamlit as st
 import os
 from dotenv import load_dotenv
-from providers.mongo.client import MongoManager
-from db.repositories.base_repo import BaseRepository
-from models.idea import Idea
-from models.video import Video
-from models.run_log import RunLog
-from db.repositories.run_log_repo import RunLogRepository
-from utils.auth import check_password
+from redline.providers.mongo.client import MongoManager
+from redline.db.repositories.base_repo import BaseRepository
+from redline.models.idea import Idea
+from redline.models.video import Video
+from redline.models.run_log import RunLog
+from redline.db.repositories.run_log_repo import RunLogRepository
+from redline.utils.auth import check_password
 from datetime import datetime, timedelta
 
 # Load environment variables
@@ -87,7 +87,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Sidebar
-from utils.ui import draw_sidebar
+from redline.utils.ui import draw_sidebar
 draw_sidebar()
 
 # Dashboard Header
@@ -163,7 +163,7 @@ else:
 # Footer Quick Actions
 st.markdown("---")
 if st.button("🚀 Manually Trigger Daily Pipeline", use_container_width=True):
-    from core.automation_service import AutomationService
+    from redline.core.automation_service import AutomationService
     auto_service = AutomationService()
     with st.spinner("Executing Pipeline..."):
         success = auto_service.run_daily_pipeline(trigger_type="manual")

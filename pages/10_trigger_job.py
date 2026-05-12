@@ -1,6 +1,6 @@
 import streamlit as st
 import os
-from providers.telegram.client import TelegramClient
+from redline.providers.telegram.client import TelegramClient
 
 st.title("🔗 Remote Trigger")
 
@@ -23,7 +23,7 @@ if not job:
 
 st.success(f"Triggering job: {job}")
 if job == "daily":
-    from core.automation_service import AutomationService
+    from redline.core.automation_service import AutomationService
     auto_service = AutomationService()
     with st.spinner("Running Daily Pipeline..."):
         success = auto_service.run_daily_pipeline(trigger_type="page_trigger")

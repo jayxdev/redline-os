@@ -1,9 +1,9 @@
-from models.run_log import RunLog, RunStep
-from db.repositories.run_log_repo import RunLogRepository
-from db.repositories.ideas_repo import IdeaRepository
-from providers.llm.nvidia_provider import NVIDIAProvider
-from providers.telegram.client import TelegramClient
-from core.config_service import ConfigService
+from redline.models.run_log import RunLog, RunStep
+from redline.db.repositories.run_log_repo import RunLogRepository
+from redline.db.repositories.ideas_repo import IdeaRepository
+from redline.providers.llm.nvidia_provider import NVIDIAProvider
+from redline.providers.telegram.client import TelegramClient
+from redline.core.config_service import ConfigService
 from datetime import datetime
 import logging
 
@@ -52,7 +52,7 @@ class AutomationService:
             try:
                 # Basic parsing, should be more robust in production
                 idea_data = json.loads(response)
-                from models.idea import Idea
+                from redline.models.idea import Idea
                 new_idea = Idea(title=idea_data['title'], summary=idea_data['summary'], status="new")
                 self.idea_repo.create(new_idea)
                 step1.status = "completed"

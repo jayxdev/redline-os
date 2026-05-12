@@ -1,7 +1,7 @@
 import streamlit as st
-from db.repositories.base_repo import BaseRepository
-from models.run_log import RunLog
-from utils.auth import check_password
+from redline.db.repositories.base_repo import BaseRepository
+from redline.models.run_log import RunLog
+from redline.utils.auth import check_password
 
 if not check_password():
     st.stop()

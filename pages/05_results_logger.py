@@ -1,6 +1,6 @@
 import streamlit as st
-from db.repositories.videos_repo import VideoRepository
-from utils.auth import check_password
+from redline.db.repositories.videos_repo import VideoRepository
+from redline.utils.auth import check_password
 from datetime import datetime
 
 if not check_password():

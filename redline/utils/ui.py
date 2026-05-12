@@ -1,5 +1,5 @@
 import streamlit as st
-from utils.auth import logout
+from redline.utils.auth import logout
 
 def draw_sidebar():
     st.sidebar.title("🏎️ Redline Cult OS")

@@ -1,5 +1,5 @@
-from db.repositories.base_repo import BaseRepository
-from models.rules_memory import RulesMemory
+from redline.db.repositories.base_repo import BaseRepository
+from redline.models.rules_memory import RulesMemory
 
 class RulesRepository(BaseRepository[RulesMemory]):
     def __init__(self):

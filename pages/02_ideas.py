@@ -1,11 +1,11 @@
 import streamlit as st
-from db.repositories.base_repo import BaseRepository
-from models.idea import Idea
-from providers.llm.nvidia_provider import NVIDIAProvider
-from utils.auth import check_password
+from redline.db.repositories.base_repo import BaseRepository
+from redline.models.idea import Idea
+from redline.providers.llm.nvidia_provider import NVIDIAProvider
+from redline.utils.auth import check_password
 import os
 
-from utils.ui import draw_sidebar
+from redline.utils.ui import draw_sidebar
 
 if not check_password():
     st.stop()

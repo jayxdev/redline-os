@@ -1,8 +1,8 @@
 import streamlit as st
-from db.repositories.ideas_repo import IdeaRepository
-from db.repositories.videos_repo import VideoRepository
-from core.planner_service import PlannerService
-from utils.auth import check_password
+from redline.db.repositories.ideas_repo import IdeaRepository
+from redline.db.repositories.videos_repo import VideoRepository
+from redline.core.planner_service import PlannerService
+from redline.utils.auth import check_password
 from datetime import datetime
 
 if not check_password():
@@ -67,7 +67,7 @@ if 'current_plan' in st.session_state:
             "updated_at": datetime.utcnow()
         }
         # In a real impl, we'd use the model and repo properly
-        from models.video import Video
+        from redline.models.video import Video
         video_repo.create(Video(**new_video))
         
         # Mark idea as archived/processed

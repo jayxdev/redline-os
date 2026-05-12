@@ -1,7 +1,7 @@
-from core.config_service import ConfigService
-from providers.llm.nvidia_provider import NVIDIAProvider
-from db.repositories.rules_repo import RulesRepository
-from utils.prompts import load_prompt
+from redline.core.config_service import ConfigService
+from redline.providers.llm.nvidia_provider import NVIDIAProvider
+from redline.db.repositories.rules_repo import RulesRepository
+from redline.utils.prompts import load_prompt
 
 class WorkflowService:
     def __init__(self):

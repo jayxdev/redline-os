@@ -1,8 +1,8 @@
 import streamlit as st
-from db.repositories.videos_repo import VideoRepository
-from utils.auth import check_password
-from providers.llm.nvidia_provider import NVIDIAProvider
-from utils.prompts import load_prompt
+from redline.db.repositories.videos_repo import VideoRepository
+from redline.utils.auth import check_password
+from redline.providers.llm.nvidia_provider import NVIDIAProvider
+from redline.utils.prompts import load_prompt
 import os
 
 if not check_password():

@@ -1,5 +1,5 @@
-from db.repositories.base_repo import BaseRepository
-from models.run_log import RunLog
+from redline.db.repositories.base_repo import BaseRepository
+from redline.models.run_log import RunLog
 
 class RunLogRepository(BaseRepository[RunLog]):
     def __init__(self):

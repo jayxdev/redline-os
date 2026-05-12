@@ -1,8 +1,8 @@
 import streamlit as st
-from db.repositories.rules_repo import RulesRepository
-from db.repositories.base_repo import BaseRepository
-from models.pattern_memory import PatternMemory
-from utils.auth import check_password
+from redline.db.repositories.rules_repo import RulesRepository
+from redline.db.repositories.base_repo import BaseRepository
+from redline.models.pattern_memory import PatternMemory
+from redline.utils.auth import check_password
 
 if not check_password():
     st.stop()
@@ -26,8 +26,8 @@ with tab1:
     else:
         st.info("No active ruleset found in database.")
         if st.button("Initialize Default Rules"):
-            from utils.prompts import load_prompt
-            from models.rules_memory import RulesMemory
+            from redline.utils.prompts import load_prompt
+            from redline.models.rules_memory import RulesMemory
             default_rules = load_prompt("rules.md", base_path="memory")
             new_rules = RulesMemory(
                 ruleset_id="rules-init",

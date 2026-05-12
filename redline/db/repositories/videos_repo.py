@@ -1,5 +1,5 @@
-from db.repositories.base_repo import BaseRepository
-from models.video import Video
+from redline.db.repositories.base_repo import BaseRepository
+from redline.models.video import Video
 
 class VideoRepository(BaseRepository[Video]):
     def __init__(self):

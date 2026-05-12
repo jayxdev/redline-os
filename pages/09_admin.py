@@ -1,8 +1,8 @@
 import streamlit as st
 import os
-from utils.auth import check_password
-from utils.prompts import list_available_prompts
-from core.config_service import ConfigService
+from redline.utils.auth import check_password
+from redline.utils.prompts import list_available_prompts
+from redline.core.config_service import ConfigService
 
 if not check_password():
     st.stop()
@@ -55,7 +55,7 @@ with st.expander("Prompt Templates"):
 with st.expander("System Reset / Maintenance", expanded=False):
     st.warning("These actions are destructive.")
     if st.button("Purge Job Logs"):
-        from providers.mongo.client import MongoManager
+        from redline.providers.mongo.client import MongoManager
         db = MongoManager().get_db()
         db.job_runs.delete_many({})
         st.success("Logs purged.")

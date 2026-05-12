@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 # Ensure root is in path for imports
 sys.path.append(os.getcwd())
 
-from core.automation_service import AutomationService
+from redline.core.automation_service import AutomationService
 
 def main():
     print("🚀 Starting Daily Content Pipeline...")

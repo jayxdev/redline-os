@@ -1,5 +1,5 @@
-from db.repositories.base_repo import BaseRepository
-from models.system_config import SystemConfig
+from redline.db.repositories.base_repo import BaseRepository
+from redline.models.system_config import SystemConfig
 from typing import Any, Optional
 from datetime import datetime
 

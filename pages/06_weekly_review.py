@@ -1,10 +1,10 @@
 import streamlit as st
-from db.repositories.videos_repo import VideoRepository
-from db.repositories.base_repo import BaseRepository
-from models.weekly_analysis import WeeklyAnalysis
-from utils.auth import check_password
-from providers.llm.nvidia_provider import NVIDIAProvider
-from utils.prompts import load_prompt
+from redline.db.repositories.videos_repo import VideoRepository
+from redline.db.repositories.base_repo import BaseRepository
+from redline.models.weekly_analysis import WeeklyAnalysis
+from redline.utils.auth import check_password
+from redline.providers.llm.nvidia_provider import NVIDIAProvider
+from redline.utils.prompts import load_prompt
 from datetime import datetime, timedelta
 import os
 

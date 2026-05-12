@@ -1,6 +1,6 @@
 from .workflow_service import WorkflowService
-from utils.prompts import load_prompt
-from models.video import VideoPlan, Video
+from redline.utils.prompts import load_prompt
+from redline.models.video import VideoPlan, Video
 import json
 
 class PlannerService(WorkflowService):
