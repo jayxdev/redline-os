@@ -5,3 +5,4 @@ python-dotenv
 pydantic
 uuid
 extra-streamlit-components
+openai

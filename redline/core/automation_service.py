@@ -45,13 +45,16 @@ class AutomationService:
 
             # Simple research prompt for now
             prompt = "Generate 1 viral video idea for a car enthusiast channel called Redline Cult. Focus on raw emotion and high-performance cars. Return as JSON with 'title' and 'summary'."
-            response = self.llm.generate(prompt)
+            response_data = self.llm.generate(prompt)
             
             # Save Idea
-            import json
             try:
-                # Basic parsing, should be more robust in production
-                idea_data = json.loads(response)
+                # Use pre-parsed data if available, otherwise parse raw text
+                idea_data = response_data.get("parsed_data")
+                if not idea_data:
+                    import json
+                    idea_data = json.loads(response_data.get("raw_text", "{}"))
+                
                 from redline.models.idea import Idea
                 new_idea = Idea(title=idea_data['title'], summary=idea_data['summary'], status="new")
                 self.idea_repo.create(new_idea)

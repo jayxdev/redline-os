@@ -22,6 +22,23 @@ with st.expander("LLM Settings", expanded=True):
         config_service.set("NVIDIA_API_KEY", nv_key, "API Key for NVIDIA LLM")
         config_service.set("DEFAULT_LLM_MODEL", nv_model, "Primary model used for generations")
         st.success("LLM settings saved to database!")
+    
+    st.markdown("---")
+    if st.button("🧪 Test NVIDIA Connection"):
+        if not nv_key:
+            st.error("Please enter an API Key first.")
+        else:
+            try:
+                from redline.providers.llm.nvidia_provider import NVIDIAProvider
+                with st.spinner("Testing connectivity..."):
+                    response_data = tester.generate("Hello, respond with 'SUCCESS' if you can read this.")
+                    raw_text = response_data.get("raw_text", "No response")
+                    if raw_text:
+                        st.success(f"NVIDIA API responded: {raw_text}")
+                    else:
+                        st.error("Received an empty response from NVIDIA.")
+            except Exception as e:
+                st.error(f"Connection Failed: {str(e)}")
 
 with st.expander("Telegram Settings", expanded=False):
     tg_token = st.text_input("Bot Token", value=config_service.get("TELEGRAM_BOT_TOKEN", ""), type="password")
