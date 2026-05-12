@@ -66,42 +66,22 @@ class NVIDIAProvider(LLMProvider):
 
     def generate_stream(self, prompt: str, system_prompt: Optional[str] = None):
         """Generator that yields text chunks for real-time streaming in UI."""
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json",
-            "Accept": "text/event-stream"
-        }
-
         messages = []
         if system_prompt:
             messages.append({"role": "system", "content": system_prompt})
         messages.append({"role": "user", "content": prompt})
 
-        payload = {
-            "model": self.model_name,
-            "messages": messages,
-            "temperature": 0.7,
-            "max_tokens": 2048,
-            "stream": True
-        }
-
         try:
-            import requests
-            response = requests.post(self.base_url, headers=headers, json=payload, timeout=60, stream=True)
+            stream = self.client.chat.completions.create(
+                model=self.model_name,
+                messages=messages,
+                temperature=0.7,
+                max_tokens=2048,
+                stream=True
+            )
             
-            for line in response.iter_lines():
-                if line:
-                    line_str = line.decode('utf-8')
-                    if line_str.startswith('data: '):
-                        data_content = line_str[6:]
-                        if data_content == '[DONE]':
-                            break
-                        try:
-                            chunk = json.loads(data_content)
-                            content = chunk['choices'][0]['delta'].get('content', '')
-                            if content:
-                                yield content
-                        except:
-                            continue
+            for chunk in stream:
+                if chunk.choices[0].delta.content:
+                    yield chunk.choices[0].delta.content
         except Exception as e:
             raise Exception(f"Streaming Error: {str(e)}")
