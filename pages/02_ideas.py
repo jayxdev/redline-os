@@ -62,21 +62,20 @@ if 'generating' in st.session_state and st.session_state.generating:
             if active_rules:
                 memory_context += f"\nActive Channel Rules:\n{active_rules.rules_markdown[:1000]}"
 
-            # 2. Update prompt with context
-            prompt = f"""Generate 3 viral content ideas for 'Redline Cult'. 
+            # 2. Build prompt with structured output format
+            from redline.core.response_parser import parse_agent_response, inject_response_format
+            from redline.models.agent_outputs import IdeaGeneratorOutput
+            
+            prompt = inject_response_format(f"""Generate 3 viral content ideas for 'Redline Cult'. 
             
             HISTORY & MEMORY CONTEXT:
             {memory_context}
             
             INSTRUCTIONS:
             Based on the context above, generate 3 NEW ideas.
-            For each idea, provide:
-            - Title: [Short Title]
-            - Summary: [One sentence]
-            - Angle: [The hook]
-            - Rationale: [Why it will go viral based on memory]
+            For each idea, provide title, hook, concept, visual_sequence, why_it_should_work, risk, and pattern_tags.
             
-            Return in a clean format."""
+            Return JSON with an "ideas" array and "top_2_recommendations" list.""")
             
             # Capture the stream
             full_response = ""
@@ -87,77 +86,41 @@ if 'generating' in st.session_state and st.session_state.generating:
             
             st.success("Generation complete! Saving to database...")
             
-            # Resilient Parser
+            # Parse with unified response parser
             try:
-                import re
+                agent_resp, gen_data = parse_agent_response(full_response, IdeaGeneratorOutput)
                 parsed_count = 0
                 
-                # Split by common idea delimiters
-                blocks = re.split(r'(?i)Idea \d+:|Idea:|Title:|\d+\. ', full_response)
-                
-                for block in blocks:
-                    clean_block = block.strip()
-                    if len(clean_block) < 30: continue # Skip fragments
-                    
-                    # Extract fields with flexible lookups
-                    lines = [l.strip() for l in clean_block.split('\n') if l.strip()]
-                    if not lines: continue
-                    
-                    # HEURISTIC: First line is the title, clean it up
-                    title = lines[0].replace('**', '').replace('-', '').replace('#', '').strip()[:100]
-                    if not title: title = "Unnamed Idea"
-                    
-                    summary = "AI Generated"
-                    angle = "General"
-                    rationale = "Potential Viral Content"
-                    
-                    def clean_md(text: str) -> str:
-                        import re
-                        # Remove markdown bold/italic
-                        text = re.sub(r'\*\*|\*|__|_', '', text)
-                        # Remove leading/trailing quotes and hashtags
-                        text = text.strip().strip('"').strip("'").strip('#').strip()
-                        return text
-
-                    for line in lines:
-                        l_low = line.lower()
-                        if "summary:" in l_low: 
-                            summary = clean_md(line.split(":", 1)[1])
-                        if "angle:" in l_low: 
-                            angle = clean_md(line.split(":", 1)[1])
-                        if "rationale:" in l_low: 
-                            rationale = clean_md(line.split(":", 1)[1])
-
-                    title = clean_md(title)
-
-                    new_idea = Idea(
-                        idea_id=str(uuid.uuid4())[:8],
-                        title=title,
-                        summary=summary,
-                        angle=angle,
-                        rationale=rationale,
-                        status="new"
-                    )
-                    idea_repo.create(new_idea)
-                    st.toast(f"💾 Stored: {title}", icon="✅")
-                    parsed_count += 1
+                if agent_resp.parsed_ok and gen_data:
+                    for item in gen_data.ideas:
+                        new_idea = Idea(
+                            idea_id=str(uuid.uuid4())[:8],
+                            title=item.title,
+                            summary=item.concept or item.why_it_should_work or "AI Generated",
+                            angle=item.hook or "General",
+                            rationale=item.why_it_should_work or "Potential Viral Content",
+                            status="new",
+                            tags=item.pattern_tags
+                        )
+                        idea_repo.create(new_idea)
+                        st.toast(f"💾 Stored: {item.title}", icon="✅")
+                        parsed_count += 1
                 
                 if parsed_count > 0:
                     st.success(f"✅ Successfully stored {parsed_count} ideas in the database.")
                 else:
                     # FAIL-SAFE: Save raw text as one big idea
+                    from datetime import datetime
                     fallback_idea = Idea(
                         idea_id=f"raw-{str(uuid.uuid4())[:4]}",
                         title=f"Bulk Generation - {datetime.now().strftime('%H:%M')}",
                         summary="Parsing failed, saving raw text for manual review.",
                         angle="Raw Output",
-                        rationale="Fail-safe backup",
+                        rationale=full_response,
                         status="new"
                     )
-                    # We store the raw text in the rationale or a new field
-                    fallback_idea.rationale = full_response
                     idea_repo.create(fallback_idea)
-                    st.warning("⚠️ Could not split ideas, saved the entire response as one record.")
+                    st.warning(f"⚠️ Could not parse structured ideas ({agent_resp.parse_error}), saved the entire response as one record.")
                     
             except Exception as e:
                 st.error(f"❌ Storage Failed: {str(e)}")

@@ -28,14 +28,23 @@ Rules:
 
 Output format:
 
-```md
-## Post Package
-- primary_caption:
-- caption_variant_1:
-- caption_variant_2:
-- caption_style:
-- primary_cta:
-- hashtag_set:
-- hashtag_strategy:
-- why_this_package_fits:
+Your response MUST contain exactly two sections:
+
+**Section 1 — Summary:** Write a short paragraph describing your packaging strategy. Start with `## Summary`.
+
+**Section 2 — Structured Output:** Return a single fenced JSON block. Start with `## Output`, then:
+
+```json
+{
+  "primary_caption": "...",
+  "caption_variant_1": "...",
+  "caption_variant_2": "...",
+  "caption_style": "...",
+  "primary_cta": "...",
+  "hashtag_set": ["#tag1", "#tag2", "#tag3"],
+  "hashtag_strategy": "...",
+  "why_this_package_fits": "..."
+}
 ```
+
+Both sections are required. The JSON must be valid and parseable.

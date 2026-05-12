@@ -58,25 +58,31 @@ After the 5 ideas, return:
 
 Output format:
 
-```md
-## Ideas
+Your response MUST contain exactly two sections:
 
-### Idea 1
-- title:
-- hook:
-- concept:
-- visual sequence:
-- why_it_should_work:
-- risk:
-- pattern_tags:
+**Section 1 — Summary:** Write a short paragraph summarising the ideas you generated and why you chose the top 2. Start with `## Summary`.
 
-## Top 2 Recommendations
+**Section 2 — Structured Output:** Return a single fenced JSON block. Start with `## Output`, then:
 
-- recommendation_1:
-- reason:
-- recommendation_2:
-- reason:
+```json
+{
+  "ideas": [
+    {
+      "title": "...",
+      "hook": "...",
+      "concept": "...",
+      "visual_sequence": "...",
+      "why_it_should_work": "...",
+      "risk": "...",
+      "pattern_tags": ["tag1", "tag2"]
+    }
+  ],
+  "top_2_recommendations": ["Idea Title 1", "Idea Title 2"],
+  "why_these_two": "..."
+}
 ```
+
+Both sections are required. The JSON must be valid and parseable.
 
 ## Memory Update Rule
 

@@ -75,29 +75,25 @@ def run_autonomous_agents_ui(idea):
             from redline.models.video import Video, PostPackage
             from redline.db.repositories.videos_repo import VideoRepository
             from redline.utils.prompts import load_prompt
-            import re
+            from redline.models.agent_outputs import CaptionPackageOutput
+            from redline.core.response_parser import parse_agent_response
             
             auto = AutomationService()
             caption_tmpl = load_prompt("03-caption-hashtag-research.md")
             caption_prompt = f"{caption_tmpl}\n\nVideo Plan:\n{plan.model_dump_json()}"
             cap_res = auto.llm.generate(caption_prompt, auto.get_system_context())
-            full_response = cap_res["raw_text"]
             
-            def extract_caption_field(field_name, default=""):
-                pattern = r'(?:^|\n)\s*(?:-\s*)?\**' + field_name + r'\**\s*:\s*(.*?)(?=\n\s*(?:-\s*)?\**[a-z0-9_]+\**\s*:|\n\s*##|$)'
-                match = re.search(pattern, full_response, re.IGNORECASE | re.DOTALL)
-                return match.group(1).strip() if match else default
-
-            caption = extract_caption_field(r"(?:primary_caption|Caption)", "See packaging notes.")
-            var1 = extract_caption_field(r"caption_variant_1", "")
-            var2 = extract_caption_field(r"caption_variant_2", "")
+            # Parse with unified response parser
+            agent_resp, cap_data = parse_agent_response(cap_res["raw_text"], CaptionPackageOutput)
             
-            caption_opts = [c for c in [caption, var1, var2] if c]
-            
-            hashtags_str = extract_caption_field(r"(?:hashtag_set|Hashtags used)", "")
-            hashtags = [h.strip() for h in hashtags_str.replace('\n', ' ').split() if h.strip().startswith('#')]
-            if not hashtags and hashtags_str:
-                hashtags = [f"#{h.strip()}" for h in hashtags_str.split(",") if h.strip()]
+            if agent_resp.parsed_ok and cap_data:
+                caption = cap_data.primary_caption
+                caption_opts = [c for c in [cap_data.primary_caption, cap_data.caption_variant_1, cap_data.caption_variant_2] if c]
+                hashtags = cap_data.hashtag_set
+            else:
+                caption = agent_resp.summary[:200] if agent_resp.summary else "See packaging notes."
+                caption_opts = [caption]
+                hashtags = []
             
             video_repo = VideoRepository()
             video_id = f"auto-{datetime.now().strftime('%m%d')}-{idea.idea_id}"
@@ -111,7 +107,7 @@ def run_autonomous_agents_ui(idea):
                     selected_caption=caption,
                     caption_options=caption_opts,
                     hashtags=hashtags,
-                    packaging_notes=full_response
+                    packaging_notes=cap_res["raw_text"]
                 )
             )
             video_repo.create(new_video)

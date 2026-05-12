@@ -45,15 +45,24 @@ Rules:
 
 Output format:
 
-```md
-## Reality Check
-- what_is_working:
-- what_is_wasting_time:
-- where_the_data_is_being_misread:
-- what_to_stop:
-- what_to_double_down_on:
-- what_to_test_next:
+Your response MUST contain exactly two sections:
+
+**Section 1 — Summary:** Write a direct, no-bullshit strategic overview. Start with `## Summary`.
+
+**Section 2 — Structured Output:** Return a single fenced JSON block. Start with `## Output`, then:
+
+```json
+{
+  "what_is_working": "...",
+  "what_is_wasting_time": "...",
+  "where_the_data_is_being_misread": "...",
+  "what_to_stop": "...",
+  "what_to_double_down_on": "...",
+  "what_to_test_next": "..."
+}
 ```
+
+Both sections are required. The JSON must be valid and parseable.
 
 ## Memory Update Rule
 

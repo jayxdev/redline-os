@@ -4,8 +4,13 @@ from redline.db.repositories.run_log_repo import RunLogRepository
 from redline.db.repositories.ideas_repo import IdeaRepository
 from redline.providers.telegram.client import TelegramClient
 from redline.models.idea import Idea
+from redline.models.agent_outputs import CaptionPackageOutput, SingleIdeaOutput
+from redline.core.response_parser import parse_agent_response, inject_response_format
 from datetime import datetime
 import uuid
+import logging
+
+logger = logging.getLogger(__name__)
 
 class AutomationService(WorkflowService):
     def __init__(self):
@@ -51,27 +56,27 @@ class AutomationService(WorkflowService):
                         plan=plan
                     )
                     
-                    # 3. Generate Captions immediately
+                    # 3. Generate Captions via structured output
                     from redline.utils.prompts import load_prompt
-                    import re
                     
                     caption_tmpl = load_prompt("03-caption-hashtag-research.md")
                     caption_prompt = f"{caption_tmpl}\n\nVideo Plan:\n{plan.model_dump_json()}"
                     cap_res = self.llm.generate(caption_prompt, system_prompt)
-                    full_response = cap_res["raw_text"]
                     
-                    # Automatic parsing
-                    cap_match = re.search(r'-\s*(?:primary_caption|Caption):\s*(.*)', full_response, re.IGNORECASE)
-                    caption = cap_match.group(1).strip() if cap_match else "See packaging notes."
+                    agent_resp, cap_data = parse_agent_response(cap_res["raw_text"], CaptionPackageOutput)
                     
-                    hash_match = re.search(r'-\s*(?:hashtag_set|Hashtags used):\s*(.*)', full_response, re.IGNORECASE)
-                    hashtags_str = hash_match.group(1).strip() if hash_match else ""
-                    hashtags = [h.strip() for h in hashtags_str.split(",") if h.strip()]
+                    if agent_resp.parsed_ok and cap_data:
+                        caption = cap_data.primary_caption
+                        hashtags = cap_data.hashtag_set
+                    else:
+                        logger.warning(f"Caption parse failed: {agent_resp.parse_error}")
+                        caption = agent_resp.summary[:200] if agent_resp.summary else "See packaging notes."
+                        hashtags = []
                     
                     new_video.post_package = PostPackage(
                         selected_caption=caption,
                         hashtags=hashtags,
-                        packaging_notes=full_response
+                        packaging_notes=cap_res["raw_text"]
                     )
                     new_video.status = "drafted"
                     
@@ -94,24 +99,28 @@ class AutomationService(WorkflowService):
             run_log.steps.append(step2)
             self.run_repo.update(run_log.id, run_log)
             
-            prompt = "Generate 1 viral video idea for 'Redline Cult' that doubles down on our recent 'Wins'. Return as JSON with 'title', 'summary', 'angle', 'rationale'."
+            prompt = inject_response_format(
+                "Generate 1 viral video idea for 'Redline Cult' that doubles down on our recent 'Wins'. "
+                "Return JSON with 'title', 'summary', 'angle', 'rationale'."
+            )
             response = self.llm.generate(prompt, system_prompt)
-            data = response["parsed_data"]
             
-            if data:
+            agent_resp, idea_data = parse_agent_response(response["raw_text"], SingleIdeaOutput)
+            
+            if agent_resp.parsed_ok and idea_data:
                 new_idea = Idea(
                     idea_id=str(uuid.uuid4())[:8],
-                    title=data.get("title", "New Autonomous Idea"),
-                    summary=data.get("summary", ""),
-                    angle=data.get("angle", "Experimental"),
-                    rationale=data.get("rationale", ""),
+                    title=idea_data.title,
+                    summary=idea_data.summary,
+                    angle=idea_data.angle or "Experimental",
+                    rationale=idea_data.rationale,
                     status="new"
                 )
                 self.idea_repo.create(new_idea)
                 step2.status = "completed"
                 step2.summary = f"Generated idea: {new_idea.title}"
             else:
-                raise Exception("Failed to generate structured idea data.")
+                raise Exception(f"Failed to generate structured idea data: {agent_resp.parse_error}")
             
             # Step 3: Telegram Notification
             if self.tg:
@@ -130,3 +139,4 @@ class AutomationService(WorkflowService):
             if self.tg:
                 self.tg.send_message(f"❌ *Daily Pipeline Failed*\n\nError: {str(e)}")
             return False
+

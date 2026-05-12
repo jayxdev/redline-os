@@ -45,16 +45,26 @@ Return:
 
 Output format:
 
-```md
-## Weekly Review
-[paste completed weekly review markdown]
+Your response MUST contain exactly two sections:
 
-## Promotion Candidates
-- hooks_to_add:
-- formats_to_add:
-- failures_to_add:
-- rules_to_change:
+**Section 1 — Summary:** Write the full weekly review narrative in markdown. Start with `## Summary`.
+
+**Section 2 — Structured Output:** Return a single fenced JSON block. Start with `## Output`, then:
+
+```json
+{
+  "wins": ["Win 1 description", "Win 2 description"],
+  "losses": ["Loss 1 description"],
+  "open_questions": ["Question 1"],
+  "summary": "Markdown narrative of the weekly review",
+  "hooks_to_add": [],
+  "formats_to_add": [],
+  "failures_to_add": [],
+  "rules_to_change": []
+}
 ```
+
+Both sections are required. The JSON must be valid and parseable.
 
 ## Memory Update Rule
 

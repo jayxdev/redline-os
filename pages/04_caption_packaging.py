@@ -48,17 +48,18 @@ if st.button("Generate Packaging Options", type="primary"):
             full_response += chunk
             placeholder.markdown(full_response)
         
-        # Automatic parsing
-        import re
+        # Parse with unified response parser
+        from redline.models.agent_outputs import CaptionPackageOutput
+        from redline.core.response_parser import parse_agent_response
         
-        # Try finding primary_caption or Caption:
-        cap_match = re.search(r'-\s*(?:primary_caption|Caption):\s*(.*)', full_response, re.IGNORECASE)
-        caption = cap_match.group(1).strip() if cap_match else "See packaging notes."
+        agent_resp, cap_data = parse_agent_response(full_response, CaptionPackageOutput)
         
-        # Try finding hashtag_set or Hashtags used:
-        hash_match = re.search(r'-\s*(?:hashtag_set|Hashtags used):\s*(.*)', full_response, re.IGNORECASE)
-        hashtags_str = hash_match.group(1).strip() if hash_match else ""
-        hashtags = [h.strip() for h in hashtags_str.split(",") if h.strip()]
+        if agent_resp.parsed_ok and cap_data:
+            caption = cap_data.primary_caption
+            hashtags = cap_data.hashtag_set
+        else:
+            caption = agent_resp.summary[:200] if agent_resp.summary else "See packaging notes."
+            hashtags = []
         
         # Save directly
         updates = {

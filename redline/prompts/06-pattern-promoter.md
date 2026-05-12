@@ -52,25 +52,24 @@ Required output:
 
 Output format:
 
-```md
-## Updated caption-hashtag-patterns.md
-[full file]
+Your response MUST contain exactly two sections:
 
-## Updated winning-hooks.md
-[full file]
+**Section 1 — Summary:** Write a short paragraph describing what was promoted and why. Start with `## Summary`.
 
-## Updated winning-formats.md
-[full file]
+**Section 2 — Structured Output:** Return a single fenced JSON block. Start with `## Output`, then:
 
-## Updated failed-patterns.md
-[full file]
-
-## Updated rules.md
-[full file]
-
-## Change Summary
-- 
+```json
+{
+  "caption_hashtag_patterns": "Full updated markdown content",
+  "winning_hooks": "Full updated markdown content",
+  "winning_formats": "Full updated markdown content",
+  "failed_patterns": "Full updated markdown content",
+  "rules": "Full updated markdown content",
+  "change_summary": ["Change 1", "Change 2"]
+}
 ```
+
+Both sections are required. The JSON must be valid and parseable.
 
 ## Memory Update Rule
 

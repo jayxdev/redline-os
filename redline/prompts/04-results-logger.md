@@ -42,10 +42,28 @@ Decision rules:
 
 Output format:
 
-```md
-## Updated File
-[paste the full updated markdown file]
+Your response MUST contain exactly two sections:
+
+**Section 1 — Summary:** Write a short paragraph describing the updated video status and key observations. Start with `## Summary`.
+
+**Section 2 — Structured Output:** Return a single fenced JSON block. Start with `## Output`, then:
+
+```json
+{
+  "status": "posted|reviewed|provisional",
+  "views": 0,
+  "likes": 0,
+  "comments": 0,
+  "shares": 0,
+  "saves": 0,
+  "watch_time": null,
+  "completion_rate": null,
+  "qualitative_notes": "...",
+  "verdict": "winner|loser|unclear|provisional"
+}
 ```
+
+Both sections are required. The JSON must be valid and parseable.
 
 ## Memory Update Rule
 

@@ -99,17 +99,32 @@ if st.session_state.weekly_chat:
     if st.button("🏁 Conclude & Save Weekly Memory", type="primary", use_container_width=True):
         with st.spinner("Finalizing memory..."):
             # Final one-shot to get the structured data based on the WHOLE chat
-            final_prompt = f"""Summarize our entire conversation into a structured Weekly Analysis.
+            from redline.core.response_parser import parse_agent_response, inject_response_format
+            from redline.models.agent_outputs import WeeklyAnalyzerOutput
+            
+            final_prompt = inject_response_format(f"""Summarize our entire conversation into a structured Weekly Analysis.
             
             HISTORY:
             {st.session_state.weekly_chat}
             
-            Return JSON with 'wins' (list), 'losses' (list), 'summary' (markdown)."""
+            Return JSON with 'wins' (list of strings), 'losses' (list of strings), 'summary' (markdown narrative), and 'open_questions' (list of strings).""")
             
             config = ConfigService()
             llm = NVIDIAProvider(config.get("NVIDIA_API_KEY"), config.get("DEFAULT_LLM_MODEL"))
             res = llm.generate(final_prompt)
-            data = res["parsed_data"] or {}
+            
+            agent_resp, weekly_data = parse_agent_response(res["raw_text"], WeeklyAnalyzerOutput)
+            
+            if agent_resp.parsed_ok and weekly_data:
+                wins = weekly_data.wins
+                losses = weekly_data.losses
+                summary_md = weekly_data.summary or agent_resp.summary
+                open_q = weekly_data.open_questions
+            else:
+                wins = []
+                losses = []
+                summary_md = agent_resp.summary or res["raw_text"]
+                open_q = []
             
             analysis_id = f"weekly-{start_date.strftime('%Y-%m-%d')}"
             analysis = WeeklyAnalysis(
@@ -117,9 +132,10 @@ if st.session_state.weekly_chat:
                 week_start=datetime.combine(start_date, datetime.min.time()),
                 week_end=datetime.combine(end_date, datetime.max.time()),
                 video_ids=[v.video_id for v in videos if v.title in selected_vids],
-                summary_markdown=data.get("summary", res["raw_text"]),
-                wins=data.get("wins", []),
-                losses=data.get("losses", []),
+                summary_markdown=summary_md,
+                wins=wins,
+                losses=losses,
+                open_questions=open_q,
                 promotion_candidates={}
             )
             analysis_repo.create(analysis)
