@@ -1,4 +1,4 @@
-from .base_repo import BaseRepository
+from db.repositories.base_repo import BaseRepository
 from models.video import Video
 
 class VideoRepository(BaseRepository[Video]):

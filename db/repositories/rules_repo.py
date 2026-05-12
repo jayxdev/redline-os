@@ -1,4 +1,4 @@
-from .base_repo import BaseRepository
+from db.repositories.base_repo import BaseRepository
 from models.rules_memory import RulesMemory
 
 class RulesRepository(BaseRepository[RulesMemory]):

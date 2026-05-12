@@ -1,5 +1,5 @@
-from .base_repo import BaseRepository
-from ...models.run_log import RunLog
+from db.repositories.base_repo import BaseRepository
+from models.run_log import RunLog
 
 class RunLogRepository(BaseRepository[RunLog]):
     def __init__(self):

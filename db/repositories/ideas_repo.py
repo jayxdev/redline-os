@@ -1,4 +1,4 @@
-from .base_repo import BaseRepository
+from db.repositories.base_repo import BaseRepository
 from models.idea import Idea
 
 class IdeaRepository(BaseRepository[Idea]):

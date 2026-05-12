@@ -1,5 +1,5 @@
 import os
-from ..db.repositories.config_repo import ConfigRepository
+from db.repositories.config_repo import ConfigRepository
 
 class ConfigService:
     def __init__(self):

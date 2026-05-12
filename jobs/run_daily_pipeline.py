@@ -1,9 +1,9 @@
-from ..providers.llm.nvidia_provider import NVIDIAProvider
-from ..db.repositories.base_repo import BaseRepository
-from ..models.run_log import RunLog, RunStep
-from ..models.idea import Idea
-from ..providers.telegram.client import TelegramClient
-from ..utils.prompts import load_prompt
+from providers.llm.nvidia_provider import NVIDIAProvider
+from db.repositories.base_repo import BaseRepository
+from models.run_log import RunLog, RunStep
+from models.idea import Idea
+from providers.telegram.client import TelegramClient
+from utils.prompts import load_prompt
 import os
 from datetime import datetime
 
