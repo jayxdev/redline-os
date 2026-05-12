@@ -1,0 +1,7 @@
+streamlit
+pymongo
+requests
+python-dotenv
+pydantic
+uuid
+extra-streamlit-components
