@@ -28,20 +28,19 @@ with st.expander("LLM Settings", expanded=True):
 
     # 2. Merge Options (Favorites + Live Sync Only)
     display_options = {}
-    
-    # Add Favorites with a star
     for name, mid in favorites.items():
         display_options[f"⭐ {name}"] = mid
-        
-    # Add Fetched models if they exist in session state
+    
     if "fetched_models_dict" in st.session_state:
         for name, mid in st.session_state.fetched_models_dict.items():
             if mid not in display_options.values():
                 display_options[f"✨ {name}"] = mid
 
-    # Selection logic
+    # Selection logic (Robust handling)
     def on_model_select():
-        st.session_state.nv_model_input = display_options[st.session_state.selected_rec_key]
+        key = st.session_state.get("selected_rec_key")
+        if key in display_options:
+            st.session_state.nv_model_input = display_options[key]
 
     if display_options:
         st.selectbox(
