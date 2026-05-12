@@ -189,16 +189,8 @@ else:
                 st.caption(f"Generated: {idea.created_at.strftime('%Y-%m-%d %H:%M')}")
             
             if c2.button("Approve ✅", key=f"app_{idea.id}", use_container_width=True, type="primary"):
-                # 1. Update Status
-                idea_repo.update(idea.id, {"status": "selected"})
-                
-                # 2. Trigger Production AUTOMATICALLY
-                from redline.core.automation_service import AutomationService
-                auto = AutomationService()
-                with st.spinner(f"🚀 Launching production for {idea.title}..."):
-                    if auto.run_daily_pipeline(trigger_type="auto_approve"):
-                        st.toast(f"Autonomous Production Complete for: {idea.title}")
-                        st.rerun()
+                from redline.utils.ui import run_autonomous_agents_ui
+                run_autonomous_agents_ui(idea)
             
             if c2.button("Reject ❌", key=f"rej_{idea.id}", use_container_width=True):
                 idea_repo.delete(idea.id)

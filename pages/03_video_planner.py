@@ -36,43 +36,41 @@ if st.button("Generate Detailed Plan", type="primary"):
     with st.spinner("AI is drafting the blueprint..."):
         try:
             plan = planner_service.generate_plan(selected_idea.title, selected_idea.summary)
-            st.session_state.current_plan = plan
-            st.success("Plan generated!")
+            
+            # Auto-Save Immediately
+            video_id = f"rc-{datetime.now().strftime('%Y-%m-%d')}-{selected_idea.idea_id.split('-')[-1]}"
+            from redline.models.video import Video
+            new_video = Video(
+                video_id=video_id,
+                title=selected_idea.title,
+                idea_id=selected_idea.idea_id,
+                status="planned",
+                plan=plan
+            )
+            video_repo.create(new_video)
+            
+            # Mark idea as processed
+            idea_repo.update(selected_idea.id, {"status": "processed"})
+            
+            st.success(f"✨ Plan generated and auto-saved as {video_id}!")
+            st.rerun()
         except Exception as e:
             st.error(f"Error: {str(e)}")
 
-if 'current_plan' in st.session_state:
-    plan = st.session_state.current_plan
-    
-    with st.container(border=True):
-        st.markdown(f"### {selected_idea.title}")
-        st.markdown(f"**Hook:** {plan.hook}")
-        st.markdown("**Beats:**")
-        for beat in plan.beats:
-            st.markdown(f"- {beat}")
-        st.markdown(f"**CTA:** {plan.cta}")
-        
-        with st.expander("Production Notes"):
-            for note in plan.production_notes:
-                st.write(f"- {note}")
-
-    if st.button("Save as Video Project"):
-        video_id = f"rc-{datetime.now().strftime('%Y-%m-%d')}-{selected_idea.idea_id.split('-')[-1]}"
-        new_video = {
-            "video_id": video_id,
-            "title": selected_idea.title,
-            "idea_id": selected_idea.idea_id,
-            "status": "planned",
-            "plan": plan.model_dump(),
-            "updated_at": datetime.utcnow()
-        }
-        # In a real impl, we'd use the model and repo properly
-        from redline.models.video import Video
-        video_repo.create(Video(**new_video))
-        
-        # Mark idea as archived/processed
-        idea_repo.update(selected_idea.id, {"status": "archived"})
-        
-        st.success(f"Video saved as {video_id}!")
-        del st.session_state.current_plan
-        st.balloons()
+# Display Planned Video if it exists for this idea
+existing_video = video_repo.collection.find_one({"idea_id": selected_idea.idea_id})
+if existing_video:
+    from redline.models.video import Video
+    v = Video(**existing_video)
+    if v.plan:
+        with st.container(border=True):
+            st.markdown(f"### ✨ Final Build Plan: {v.title}")
+            st.markdown(f"**Hook:** {v.plan.hook}")
+            st.markdown("**Beats:**")
+            for beat in v.plan.beats:
+                st.markdown(f"- {beat}")
+            st.markdown(f"**CTA:** {v.plan.cta}")
+            
+            with st.expander("Production Notes"):
+                for note in v.plan.production_notes:
+                    st.write(f"- {note}")
