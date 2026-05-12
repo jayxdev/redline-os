@@ -5,11 +5,13 @@ from .base import LLMProvider
 
 class NVIDIAProvider(LLMProvider):
     def __init__(self, api_key: str, model_name: str = "minimaxai/minimax-m2.7"):
-        self.api_key = api_key
-        self.model_name = model_name
+        self.api_key = api_key.strip() if api_key else ""
+        self.model_name = model_name.strip() if model_name else ""
+        
+        # Standard NVIDIA NIM Gateway
         self.client = OpenAI(
             base_url="https://integrate.api.nvidia.com/v1",
-            api_key=api_key
+            api_key=self.api_key
         )
 
     def generate(self, prompt: str, system_prompt: Optional[str] = None) -> Dict[str, Any]:
