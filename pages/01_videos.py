@@ -47,7 +47,20 @@ else:
                         st.warning("No plan data found.")
                 with tab2:
                     if v.post_package:
+                        import re
                         options = v.post_package.caption_options
+                        
+                        # Fallback: parse variants from raw packaging_notes
+                        if not options and v.post_package.packaging_notes:
+                            raw = v.post_package.packaging_notes
+                            def _extract(field):
+                                m = re.search(r'(?:^|\n)\s*(?:-\s*)?\**' + field + r'\**\s*:\s*(.*?)(?=\n\s*(?:-\s*)?\**[a-z0-9_]+\**\s*:|\n\s*##|$)', raw, re.IGNORECASE | re.DOTALL)
+                                return m.group(1).strip() if m else ""
+                            pc = _extract("primary_caption")
+                            v1 = _extract("caption_variant_1")
+                            v2 = _extract("caption_variant_2")
+                            options = [c for c in [pc, v1, v2] if c]
+                        
                         if not options and v.post_package.selected_caption:
                             options = [v.post_package.selected_caption]
                             
