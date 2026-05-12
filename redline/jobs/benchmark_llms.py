@@ -12,6 +12,7 @@ def run_benchmark():
     
     models = {
         "Llama 3.3 Super": "nvidia/llama-3.3-nemotron-super-49b-v1",
+        "Llama 3.1 70B (Meta)": "meta/llama-3.1-70b-instruct",
         "Llama 3.1 Nemotron 70B": "nvidia/llama-3.1-nemotron-70b-instruct",
         "Mistral Large 2": "mistralai/mistral-large-2-instruct",
         "Minimax M2.7": "minimaxai/minimax-m2.7"

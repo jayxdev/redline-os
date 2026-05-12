@@ -18,13 +18,11 @@ st.info("These settings are stored in MongoDB and override .env file values.")
 with st.expander("LLM Settings", expanded=True):
     nv_key = st.text_input("NVIDIA API Key", value=config_service.get("NVIDIA_API_KEY", ""), type="password")
     
-    # Recommended Models Mapping (Active 2026 Catalog)
+    # Recommended Models Mapping (Verified Active 2026)
     recommended_models = {
         "Llama 3.3 Super (Fastest/Smartest)": "nvidia/llama-3.3-nemotron-super-49b-v1",
-        "Mistral Large 2 (Best Creative Tone)": "mistralai/mistral-large-2-instruct",
-        "Minimax M2.7 (Deep Reasoning)": "minimaxai/minimax-m2.7",
-        "Llama 3.1 Nemotron 70B (Reliable)": "nvidia/llama-3.1-nemotron-70b-instruct",
-        "Qwen 3.5 (Powerful)": "qwen/qwen3.5-397b-a17b"
+        "Llama 3.1 70B (Reliable)": "meta/llama-3.1-70b-instruct",
+        "Minimax M2.7 (Deep Reasoning)": "minimaxai/minimax-m2.7"
     }
     
     # Selection logic
