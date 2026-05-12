@@ -18,77 +18,108 @@ st.info("These settings are stored in MongoDB and override .env file values.")
 with st.expander("LLM Settings", expanded=True):
     nv_key = st.text_input("NVIDIA API Key", value=config_service.get("NVIDIA_API_KEY", ""), type="password")
     
-    # Recommended Models Mapping (Verified Active 2026)
-    recommended_models = {
-        "Llama 3.3 Super (Fastest/Smartest)": "nvidia/llama-3.3-nemotron-super-49b-v1",
-        "Llama 3.1 70B (Reliable)": "meta/llama-3.1-70b-instruct",
-        "Minimax M2.7 (Deep Reasoning)": "minimaxai/minimax-m2.7"
-    }
-    
-    # Selection logic
-    def update_model_id():
-        st.session_state.nv_model_input = recommended_models[st.session_state.selected_rec_key]
+    # 1. Load Favorites from DB
+    import json
+    fav_json = config_service.get("FAVORITE_MODELS", "{}")
+    try:
+        favorites = json.loads(fav_json)
+    except:
+        favorites = {}
 
-    selected_rec = st.selectbox(
-        "Recommended Models", 
-        options=list(recommended_models.keys()), 
-        key="selected_rec_key",
-        on_change=update_model_id
-    )
+    # 2. Merge Options (Favorites + Live Sync Only)
+    display_options = {}
+    
+    # Add Favorites with a star
+    for name, mid in favorites.items():
+        display_options[f"⭐ {name}"] = mid
+        
+    # Add Fetched models if they exist in session state
+    if "fetched_models_dict" in st.session_state:
+        for name, mid in st.session_state.fetched_models_dict.items():
+            if mid not in display_options.values():
+                display_options[f"✨ {name}"] = mid
+
+    # Selection logic
+    def on_model_select():
+        st.session_state.nv_model_input = display_options[st.session_state.selected_rec_key]
+
+    if display_options:
+        st.selectbox(
+            "Model Selection (Favorites + Live)", 
+            options=list(display_options.keys()), 
+            key="selected_rec_key",
+            on_change=on_model_select
+        )
+    else:
+        st.warning("No models found. Hit 'Sync Live Catalog' below to discover models.")
     
     if "nv_model_input" not in st.session_state:
-        st.session_state.nv_model_input = config_service.get("DEFAULT_LLM_MODEL", recommended_models[selected_rec])
+        # Fallback to current saved model if it exists, otherwise empty
+        st.session_state.nv_model_input = config_service.get("DEFAULT_LLM_MODEL", "")
 
     nv_model = st.text_input("Model ID", key="nv_model_input")
-    if st.button("Save LLM Settings"):
-        config_service.set("NVIDIA_API_KEY", nv_key, "API Key for NVIDIA LLM")
-        config_service.set("DEFAULT_LLM_MODEL", nv_model, "Primary model used for generations")
-        st.success("LLM settings saved to database!")
+    
+    col_save, col_fav = st.columns([1, 1])
+    with col_save:
+        if st.button("💾 Save as Default", use_container_width=True):
+            config_service.set("NVIDIA_API_KEY", nv_key, "API Key for NVIDIA LLM")
+            config_service.set("DEFAULT_LLM_MODEL", nv_model, "Primary model used for generations")
+            st.success("Settings Saved!")
+    
+    with col_fav:
+        if st.button("⭐ Add to Favorites", use_container_width=True):
+            # Clean up name for favorite
+            fav_name = nv_model.split("/")[-1].replace("-", " ").title()
+            favorites[fav_name] = nv_model
+            config_service.set("FAVORITE_MODELS", json.dumps(favorites), "List of bookmarked models")
+            st.success(f"Added {fav_name} to Favorites!")
+            st.rerun()
+
+    if favorites:
+        with st.expander("🗑️ Manage Favorites"):
+            for name, mid in list(favorites.items()):
+                col_n, col_d = st.columns([3, 1])
+                col_n.write(f"**{name}**: `{mid}`")
+                if col_d.button("Remove", key=f"del_{mid}"):
+                    del favorites[name]
+                    config_service.set("FAVORITE_MODELS", json.dumps(favorites))
+                    st.rerun()
     
     st.markdown("---")
     col1, col2 = st.columns(2)
     with col1:
         if st.button("🧪 Test Connection"):
-            if not nv_key:
-                st.error("Please enter an API Key first.")
+            if not nv_key: st.error("Enter API Key.")
             else:
                 try:
                     from redline.providers.llm.nvidia_provider import NVIDIAProvider
                     with st.spinner("Testing..."):
                         tester = NVIDIAProvider(nv_key, nv_model)
-                        response_data = tester.generate("Hello, respond with 'SUCCESS' if you can read this.")
-                        raw_text = response_data.get("raw_text", "No response")
-                        if raw_text: st.success(f"NVIDIA API responded: {raw_text}")
-                        else: st.error("Received an empty response.")
-                except Exception as e:
-                    st.error(f"Connection Failed: {str(e)}")
+                        res = tester.generate("Hello")
+                        if res.get("raw_text"): st.success("Verified! ✅")
+                        else: st.error("No response.")
+                except Exception as e: st.error(f"Error: {str(e)}")
     
     with col2:
-        if st.button("🔄 Fetch Latest Models"):
-            if not nv_key:
-                st.error("Enter API Key to fetch models.")
+        if st.button("🔄 Sync Live Catalog"):
+            if not nv_key: st.error("Enter API Key.")
             else:
                 try:
                     import requests
                     headers = {"Authorization": f"Bearer {nv_key}"}
-                    response = requests.get("https://integrate.api.nvidia.com/v1/models", headers=headers, timeout=10)
-                    if response.status_code == 200:
-                        models_data = response.json().get("data", [])
-                        # Filter for interesting chat models
-                        chat_models = [m["id"] for m in models_data if "instruct" in m["id"].lower() or "chat" in m["id"].lower() or "super" in m["id"].lower()]
-                        st.session_state.fetched_models = sorted(chat_models)
-                        st.success(f"Found {len(chat_models)} active chat models!")
-                    else:
-                        st.error(f"Failed to fetch models: {response.status_code}")
-                except Exception as e:
-                    st.error(f"Fetch Error: {str(e)}")
-
-    if "fetched_models" in st.session_state:
-        st.info("Available Models (Copy/Paste into 'Model ID' above):")
-        st.code("\n".join(st.session_state.fetched_models))
-        if st.button("Clear Fetched List"):
-            del st.session_state.fetched_models
-            st.rerun()
+                    res = requests.get("https://integrate.api.nvidia.com/v1/models", headers=headers, timeout=10)
+                    if res.status_code == 200:
+                        models_data = res.json().get("data", [])
+                        fetched = {}
+                        for m in models_data:
+                            mid = m["id"]
+                            name = mid.split("/")[-1].replace("-", " ").title()
+                            fetched[name] = mid
+                        st.session_state.fetched_models_dict = fetched
+                        st.success(f"Sync Complete! {len(fetched)} found.")
+                        st.rerun()
+                    else: st.error(f"Error: {res.status_code}")
+                except Exception as e: st.error(f"Error: {str(e)}")
 
 with st.expander("Telegram Settings", expanded=False):
     tg_token = st.text_input("Bot Token", value=config_service.get("TELEGRAM_BOT_TOKEN", ""), type="password")
