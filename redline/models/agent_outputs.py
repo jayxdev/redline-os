@@ -15,7 +15,7 @@ class IdeaItem(BaseModel):
     title: str
     hook: str = ""
     concept: str = ""
-    visual_sequence: str = ""
+    visual_sequence: List[str] = []
     why_it_should_work: str = ""
     risk: str = ""
     pattern_tags: List[str] = []

@@ -71,7 +71,7 @@ Your response MUST contain exactly two sections:
       "title": "...",
       "hook": "...",
       "concept": "...",
-      "visual_sequence": "...",
+      "visual_sequence": ["Shot 1", "Shot 2", "Shot 3"],
       "why_it_should_work": "...",
       "risk": "...",
       "pattern_tags": ["tag1", "tag2"]
