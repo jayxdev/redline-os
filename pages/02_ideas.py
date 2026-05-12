@@ -2,6 +2,7 @@ import streamlit as st
 from redline.db.repositories.base_repo import BaseRepository
 from redline.models.idea import Idea
 from redline.providers.llm.nvidia_provider import NVIDIAProvider
+from redline.providers.mongo.client import MongoManager
 from redline.utils.auth import check_password
 import os
 import uuid
