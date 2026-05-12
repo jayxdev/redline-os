@@ -40,8 +40,10 @@ else:
                 tab1, tab2 = st.tabs(["SCRIPT & PLAN", "SOCIAL PACKAGE"])
                 with tab1:
                     if v.plan:
-                        st.markdown(f"**ANGLE:** {v.plan.angle}")
-                        st.markdown(v.plan.script_outline)
+                        st.markdown(f"**HOOK:** {v.plan.hook}")
+                        st.markdown(f"**CONCEPT:**\n{v.plan.concept}")
+                        if v.plan.beats:
+                            st.markdown("**BEATS:**\n- " + "\n- ".join(v.plan.beats))
                     else:
                         st.warning("No plan data found.")
                 with tab2:

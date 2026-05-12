@@ -98,9 +98,9 @@ def dashboard():
         st.markdown('<div class="card">', unsafe_allow_html=True)
         st.subheader("🤖 ACTIVE AGENTS")
         agents = [
-            {"name": "Content Researcher", "status": "Online", "activity": "Scanning trends..."},
-            {"name": "Scripting Engine", "status": "Idle", "activity": "Waiting for idea..."},
-            {"name": "Data Analyst", "status": "Online", "activity": "Syncing MongoDB..."}
+            {"name": "Idea Generator", "status": "Online", "activity": "Scanning trends & generating concepts..."},
+            {"name": "Video Planner", "status": "Online", "activity": "Building structured plans & hooks..."},
+            {"name": "Caption Agent", "status": "Online", "activity": "Crafting packaging & hashtags..."}
         ]
         for agent in agents:
             badge_class = "status-online" if agent["status"] == "Online" else "status-idle"
