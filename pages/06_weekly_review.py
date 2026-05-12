@@ -48,7 +48,7 @@ if st.button("Run Weekly Analysis", type="primary"):
     from redline.core.config_service import ConfigService
     config = ConfigService()
     api_key = config.get("NVIDIA_API_KEY")
-    model = config.get("DEFAULT_LLM_MODEL", "meta/llama-3-70b-instruct")
+    model = config.get("DEFAULT_LLM_MODEL", "nvidia/llama-3.3-nemotron-super-49b-v1")
     
     if not api_key:
         st.error("NVIDIA API Key not found.")

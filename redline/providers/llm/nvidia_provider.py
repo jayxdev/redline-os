@@ -73,6 +73,6 @@ class NVIDIAProvider(LLMProvider):
                                 content = chunk_json['choices'][0]['delta'].get('content', '')
                                 if content: yield content
                 else:
-                    raise Exception(f"NVIDIA API Error: {response.status_code}")
-            except:
-                raise Exception(f"All connection attempts failed: {str(e)}")
+                    raise Exception(f"NVIDIA API Error: {response.status_code} - URL: {url} - Model: {self.model_name} - Response: {response.text[:100]}")
+            except Exception as inner_e:
+                raise Exception(f"All connection attempts failed. Library Error: {str(e)} | Requests Fallback Error: {str(inner_e)}")
