@@ -76,13 +76,14 @@ st.markdown("""
     }
 
     .status-badge {
-        padding: 4px 8px;
+        padding: 4px 10px;
         border-radius: 4px;
-        font-size: 0.8em;
+        font-size: 0.75em;
         font-weight: bold;
+        letter-spacing: 0.5px;
     }
-    .status-online { background-color: #00ff0022; color: #00ff00; border: 1px solid #00ff0055; }
-    .status-idle { background-color: #ffff0022; color: #ffff00; border: 1px solid #ffff0055; }
+    .status-online { background-color: #16a34a; color: #ffffff; }
+    .status-idle { background-color: #a16207; color: #ffffff; }
 </style>
 """, unsafe_allow_html=True)
 
