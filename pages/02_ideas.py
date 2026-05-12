@@ -27,11 +27,11 @@ def get_llm():
     config = ConfigService()
     
     api_key = config.get("NVIDIA_API_KEY")
-    model = config.get("DEFAULT_LLM_MODEL", "nvidia/llama-3.3-nemotron-super-49b-v1")
+    model = config.get("DEFAULT_LLM_MODEL")
     
-    if not api_key:
-        st.error("NVIDIA_API_KEY not found in configuration.")
-        return None
+    if not api_key or not model:
+        st.error("⚠️ AI Configuration Incomplete. Please set your NVIDIA API Key and Default Model in the Admin Settings.")
+        st.stop()
     return NVIDIAProvider(api_key, model)
 
 # Sidebar actions

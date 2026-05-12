@@ -7,7 +7,9 @@ class WorkflowService:
     def __init__(self):
         self.config = ConfigService()
         api_key = self.config.get("NVIDIA_API_KEY")
-        model = self.config.get("DEFAULT_LLM_MODEL", "meta/llama-3-70b-instruct")
+        model = self.config.get("DEFAULT_LLM_MODEL")
+        if not api_key or not model:
+            raise ValueError("AI Configuration Incomplete. Missing NVIDIA_API_KEY or DEFAULT_LLM_MODEL in system_config.")
         self.llm = NVIDIAProvider(api_key, model)
         self.rules_repo = RulesRepository()
 

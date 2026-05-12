@@ -46,22 +46,49 @@ with st.expander("LLM Settings", expanded=True):
         st.success("LLM settings saved to database!")
     
     st.markdown("---")
-    if st.button("🧪 Test NVIDIA Connection"):
-        if not nv_key:
-            st.error("Please enter an API Key first.")
-        else:
-            try:
-                from redline.providers.llm.nvidia_provider import NVIDIAProvider
-                with st.spinner("Testing connectivity..."):
-                    tester = NVIDIAProvider(nv_key, nv_model)
-                    response_data = tester.generate("Hello, respond with 'SUCCESS' if you can read this.")
-                    raw_text = response_data.get("raw_text", "No response")
-                    if raw_text:
-                        st.success(f"NVIDIA API responded: {raw_text}")
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("🧪 Test Connection"):
+            if not nv_key:
+                st.error("Please enter an API Key first.")
+            else:
+                try:
+                    from redline.providers.llm.nvidia_provider import NVIDIAProvider
+                    with st.spinner("Testing..."):
+                        tester = NVIDIAProvider(nv_key, nv_model)
+                        response_data = tester.generate("Hello, respond with 'SUCCESS' if you can read this.")
+                        raw_text = response_data.get("raw_text", "No response")
+                        if raw_text: st.success(f"NVIDIA API responded: {raw_text}")
+                        else: st.error("Received an empty response.")
+                except Exception as e:
+                    st.error(f"Connection Failed: {str(e)}")
+    
+    with col2:
+        if st.button("🔄 Fetch Latest Models"):
+            if not nv_key:
+                st.error("Enter API Key to fetch models.")
+            else:
+                try:
+                    import requests
+                    headers = {"Authorization": f"Bearer {nv_key}"}
+                    response = requests.get("https://integrate.api.nvidia.com/v1/models", headers=headers, timeout=10)
+                    if response.status_code == 200:
+                        models_data = response.json().get("data", [])
+                        # Filter for interesting chat models
+                        chat_models = [m["id"] for m in models_data if "instruct" in m["id"].lower() or "chat" in m["id"].lower() or "super" in m["id"].lower()]
+                        st.session_state.fetched_models = sorted(chat_models)
+                        st.success(f"Found {len(chat_models)} active chat models!")
                     else:
-                        st.error("Received an empty response from NVIDIA.")
-            except Exception as e:
-                st.error(f"Connection Failed: {str(e)}")
+                        st.error(f"Failed to fetch models: {response.status_code}")
+                except Exception as e:
+                    st.error(f"Fetch Error: {str(e)}")
+
+    if "fetched_models" in st.session_state:
+        st.info("Available Models (Copy/Paste into 'Model ID' above):")
+        st.code("\n".join(st.session_state.fetched_models))
+        if st.button("Clear Fetched List"):
+            del st.session_state.fetched_models
+            st.rerun()
 
 with st.expander("Telegram Settings", expanded=False):
     tg_token = st.text_input("Bot Token", value=config_service.get("TELEGRAM_BOT_TOKEN", ""), type="password")
