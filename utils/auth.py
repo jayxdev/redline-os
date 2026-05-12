@@ -23,12 +23,17 @@ def check_password():
 
     def password_entered():
         """Checks whether a password entered by the user is correct."""
-        if st.session_state["password_input"] == os.getenv("APP_PASSWORD", "admin"):
+        user_input = st.session_state.get("password_input")
+        if not user_input:
+            return
+            
+        correct_password = os.getenv("APP_PASSWORD", "admin")
+        if user_input == correct_password:
             st.session_state["password_correct"] = True
             # Set cookie to expire in 24 hours
-            correct_password = os.getenv("APP_PASSWORD", "admin")
             cookie_manager.set("redline_auth", correct_password, expires_at=datetime.now() + timedelta(days=1))
-            del st.session_state["password_input"]
+            if "password_input" in st.session_state:
+                del st.session_state["password_input"]
         else:
             st.session_state["password_correct"] = False
 
