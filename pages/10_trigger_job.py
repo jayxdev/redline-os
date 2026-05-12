@@ -7,7 +7,10 @@ st.title("🔗 Remote Trigger")
 token = st.query_params.get("token")
 job = st.query_params.get("job")
 
-EXPECTED_TOKEN = os.getenv("TRIGGER_TOKEN")
+from redline.core.config_service import ConfigService
+config = ConfigService()
+
+EXPECTED_TOKEN = config.get("TRIGGER_TOKEN")
 
 if not token:
     st.error("Access Denied: Missing token.")
@@ -36,8 +39,8 @@ else:
 
 # Telegram Notification Test
 if st.button("Send Test Notification"):
-    bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
-    chat_id = os.getenv("TELEGRAM_CHAT_ID")
+    bot_token = config.get("TELEGRAM_BOT_TOKEN")
+    chat_id = config.get("TELEGRAM_CHAT_ID")
     if bot_token and chat_id:
         tg = TelegramClient(bot_token, chat_id)
         if tg.send_message(f"🚀 Triggered job: {job} from remote page."):
@@ -45,4 +48,4 @@ if st.button("Send Test Notification"):
         else:
             st.error("Failed to send notification.")
     else:
-        st.error("Telegram credentials not found.")
+        st.error("Telegram credentials not found in configuration.")

@@ -23,8 +23,16 @@ video = next(v for v in videos if v.title == selected_vid_title)
 st.write(f"**Hook:** {video.plan.hook if video.plan else 'N/A'}")
 
 if st.button("Generate Packaging Options", type="primary"):
-    api_key = os.getenv("NVIDIA_API_KEY")
-    llm = NVIDIAProvider(api_key)
+    from redline.core.config_service import ConfigService
+    config = ConfigService()
+    api_key = config.get("NVIDIA_API_KEY")
+    model = config.get("DEFAULT_LLM_MODEL", "meta/llama-3-70b-instruct")
+    
+    if not api_key:
+        st.error("NVIDIA API Key not found.")
+        st.stop()
+        
+    llm = NVIDIAProvider(api_key, model)
     
     prompt_tmpl = load_prompt("03-caption-hashtag-research.md")
     prompt = f"{prompt_tmpl}\n\nVideo Plan:\n{video.plan.model_dump_json() if video.plan else 'N/A'}"

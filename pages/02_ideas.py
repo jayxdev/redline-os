@@ -19,10 +19,14 @@ idea_repo = BaseRepository("ideas", Idea)
 
 # LLM Provider
 def get_llm():
-    api_key = os.getenv("NVIDIA_API_KEY")
-    model = os.getenv("DEFAULT_LLM_MODEL", "meta/llama-3-70b-instruct")
+    from redline.core.config_service import ConfigService
+    config = ConfigService()
+    
+    api_key = config.get("NVIDIA_API_KEY")
+    model = config.get("DEFAULT_LLM_MODEL", "meta/llama-3-70b-instruct")
+    
     if not api_key:
-        st.error("NVIDIA_API_KEY not found.")
+        st.error("NVIDIA_API_KEY not found in configuration.")
         return None
     return NVIDIAProvider(api_key, model)
 

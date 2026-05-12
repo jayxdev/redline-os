@@ -45,8 +45,16 @@ selected_vids = st.multiselect("Confirm videos to include:",
 if st.button("Run Weekly Analysis", type="primary"):
     selected_data = [v.model_dump_json() for v in videos if v.title in selected_vids]
     
-    api_key = os.getenv("NVIDIA_API_KEY")
-    llm = NVIDIAProvider(api_key)
+    from redline.core.config_service import ConfigService
+    config = ConfigService()
+    api_key = config.get("NVIDIA_API_KEY")
+    model = config.get("DEFAULT_LLM_MODEL", "meta/llama-3-70b-instruct")
+    
+    if not api_key:
+        st.error("NVIDIA API Key not found.")
+        st.stop()
+        
+    llm = NVIDIAProvider(api_key, model)
     
     prompt_tmpl = load_prompt("05-weekly-analyzer.md")
     prompt = f"{prompt_tmpl}\n\nDate Range: {start_date} to {end_date}\n\nVideos Data:\n" + "\n---\n".join(selected_data)
