@@ -38,12 +38,17 @@ if st.button("Generate Packaging Options", type="primary"):
         
     llm = NVIDIAProvider(api_key, model)
     
-    prompt_tmpl = load_prompt("03-caption-hashtag-research.md")
-    prompt = f"{prompt_tmpl}\n\nVideo Plan:\n{video.plan.model_dump_json() if video.plan else 'N/A'}"
-    
     with st.spinner("Generating options..."):
-        response = llm.generate(prompt)
-        st.session_state.packaging_options = response["raw_text"]
+        prompt_tmpl = load_prompt("03-caption-hashtag-research.md")
+        prompt = f"{prompt_tmpl}\n\nVideo Plan:\n{video.plan.model_dump_json() if video.plan else 'N/A'}"
+        
+        full_response = ""
+        placeholder = st.empty()
+        for chunk in llm.generate_stream(prompt):
+            full_response += chunk
+            placeholder.markdown(full_response)
+        
+        st.session_state.packaging_options = full_response
 
 if 'packaging_options' in st.session_state:
     st.markdown("### Suggested Packaging")

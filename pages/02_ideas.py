@@ -45,16 +45,11 @@ if 'generating' in st.session_state and st.session_state.generating:
     llm = get_llm()
     if llm:
         with st.spinner("Consulting the AI..."):
-            prompt = "Generate 3 viral content ideas for a bike/car enthusiast channel called Redline Cult. Focus on high-speed aesthetics and technical knowledge. Return JSON format."
-            response = llm.generate(prompt)
+            prompt = "Generate 3 viral content ideas for a bike/car enthusiast channel called Redline Cult. Focus on high-speed aesthetics and technical knowledge. Return in a clean markdown list format with titles and bullet points."
             
-            if response["parsed_data"]:
-                st.success("Ideas generated!")
-                st.json(response["parsed_data"])
-                # In a real version, we would save these to the DB here
-            else:
-                st.warning("AI returned unstructured data:")
-                st.markdown(response["raw_text"])
+            # Using stream for better UX
+            st.write_stream(llm.generate_stream(prompt))
+            st.success("Generation complete!")
     
     if st.button("Clear"):
         st.session_state.generating = False
