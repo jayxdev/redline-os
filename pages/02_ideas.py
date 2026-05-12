@@ -7,12 +7,8 @@ from redline.utils.auth import check_password
 import os
 import uuid
 
-from redline.utils.ui import draw_sidebar
-
 if not check_password():
     st.stop()
-
-draw_sidebar()
 
 st.title("💡 Idea Generation")
 

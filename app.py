@@ -135,19 +135,31 @@ def dashboard():
 
     # Row 2: Recent Ideas
     st.subheader("💡 RECENT IDEAS")
-    recent_ideas = idea_repo.list(limit=5, sort=[("created_at", -1)])
+    recent_ideas = idea_repo.list(limit=5, filters={"status": "new"}, sort=[("created_at", -1)])
     if not recent_ideas:
-        st.info("No ideas found. Head to the IDEATION page to generate some!")
+        st.info("No new ideas found. Head to the IDEATION STATION to generate some!")
     else:
         cols = st.columns(len(recent_ideas))
         for idx, idea in enumerate(recent_ideas):
             with cols[idx]:
                 st.markdown(f"""
-                <div class="card" style="height: 200px; overflow: hidden;">
+                <div class="card" style="height: 180px; overflow: hidden; margin-bottom: 5px;">
                     <div style="font-weight: bold; margin-bottom: 8px; color: var(--accent-color);">{idea.title.upper()}</div>
-                    <div style="font-size: 0.85em; color: var(--subtext-color);">{idea.summary[:100]}...</div>
+                    <div style="font-size: 0.85em; color: var(--subtext-color);">{idea.summary[:80]}...</div>
                 </div>
                 """, unsafe_allow_html=True)
+                
+                # Direct Actions
+                ca, cr = st.columns(2)
+                if ca.button("✅", key=f"app_{idea.id}", help="Approve and Launch", use_container_width=True):
+                    idea_repo.update(idea.id, {"status": "selected"})
+                    st.toast(f"🚀 Launched: {idea.title}")
+                    st.rerun()
+                
+                if cr.button("❌", key=f"rej_{idea.id}", help="Permanently Delete", use_container_width=True):
+                    idea_repo.delete(idea.id)
+                    st.toast(f"🗑️ Deleted: {idea.title}")
+                    st.rerun()
 
     st.markdown("---")
     if st.button("🚀 TRIGGER DAILY PIPELINE", use_container_width=True):
@@ -161,6 +173,7 @@ def dashboard():
 
 # 1. Map Pages
 pg_dashboard = st.Page(dashboard, title="DASHBOARD", icon="🏎️", default=True)
+pg_videos = st.Page("pages/01_videos.py", title="VIDEOS", icon="🎬")
 pg_ideas = st.Page("pages/02_ideas.py", title="IDEATION STATION", icon="💡")
 pg_planner = st.Page("pages/03_video_planner.py", title="VIDEO PLANNER", icon="🎬")
 pg_packaging = st.Page("pages/04_caption_packaging.py", title="CAPTION PACKAGING", icon="📦")
@@ -173,7 +186,7 @@ pg_admin = st.Page("pages/09_admin.py", title="ADMIN SETTINGS", icon="⚙️")
 # 2. Run Navigation
 pg = st.navigation({
     "MAIN": [pg_dashboard],
-    "CONTENT ENGINE": [pg_ideas, pg_planner, pg_packaging],
+    "CONTENT ENGINE": [pg_videos, pg_ideas, pg_planner, pg_packaging],
     "INTELLIGENCE": [pg_review, pg_patterns],
     "SYSTEM": [pg_logger, pg_history, pg_admin]
 })
