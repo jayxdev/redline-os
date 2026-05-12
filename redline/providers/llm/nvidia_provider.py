@@ -66,22 +66,68 @@ class NVIDIAProvider(LLMProvider):
 
     def generate_stream(self, prompt: str, system_prompt: Optional[str] = None):
         """Generator that yields text chunks for real-time streaming in UI."""
+        
+        # 1. Prepare messages
         messages = []
         if system_prompt:
             messages.append({"role": "system", "content": system_prompt})
         messages.append({"role": "user", "content": prompt})
 
+        # 2. Strategy Selection: Always use requests for Llama 3.3 Super (Verified stable)
+        force_requests = "llama-3.3-nemotron-super-49b" in self.model_name.lower()
+        
+        if not force_requests:
+            try:
+                # Try Library First
+                stream = self.client.chat.completions.create(
+                    model=self.model_name,
+                    messages=messages,
+                    temperature=0.7,
+                    max_tokens=2048,
+                    stream=True
+                )
+                for chunk in stream:
+                    if chunk.choices[0].delta.content:
+                        yield chunk.choices[0].delta.content
+                return # If successful, exit
+            except Exception:
+                # Fallback to requests if library fails
+                pass
+
+        # 3. Requests Fallback (or forced for Llama 3.3)
+        import requests
+        url = "https://integrate.api.nvidia.com/v1/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+            "Accept": "text/event-stream"
+        }
+        payload = {
+            "model": self.model_name,
+            "messages": messages,
+            "temperature": 0.7,
+            "max_tokens": 2048,
+            "stream": True
+        }
+
         try:
-            stream = self.client.chat.completions.create(
-                model=self.model_name,
-                messages=messages,
-                temperature=0.7,
-                max_tokens=2048,
-                stream=True
-            )
-            
-            for chunk in stream:
-                if chunk.choices[0].delta.content:
-                    yield chunk.choices[0].delta.content
+            response = requests.post(url, headers=headers, json=payload, timeout=60, stream=True)
+            if response.status_code == 200:
+                for line in response.iter_lines():
+                    if line:
+                        line_str = line.decode('utf-8')
+                        if line_str.startswith('data: '):
+                            data_content = line_str[6:]
+                            if data_content == '[DONE]':
+                                break
+                            try:
+                                chunk = json.loads(data_content)
+                                content = chunk['choices'][0]['delta'].get('content', '')
+                                if content:
+                                    yield content
+                            except:
+                                continue
+            else:
+                raise Exception(f"NVIDIA API Error: {response.status_code}")
         except Exception as e:
             raise Exception(f"Streaming Error: {str(e)}")
