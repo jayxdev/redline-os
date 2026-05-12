@@ -7,35 +7,30 @@ def draw_sidebar():
     config = ConfigService()
     
     with st.sidebar:
-        st.title("🏎️ Redline OS")
-        
-        # 1. System Pulse (Compact)
+        # Mini Header Row
+        col_t, col_l = st.columns([3, 1])
+        col_t.markdown("### 🏎️ Redline `v1.5`")
+        if col_l.button("🚪", help="Logout", key="top_logout"):
+            logout()
+            st.rerun()
+            
+        # Unified Stats Row
         current_model = config.get("DEFAULT_LLM_MODEL", "Llama 3.3")
-        display_name = current_model.split("/")[-1].replace("-", " ").title()[:20]
-        
-        st.markdown(f"**Engine:** `{display_name}`")
+        engine = current_model.split("/")[-1].split("-")[0].title()
         
         try:
             db = MongoManager().get_db()
             v_count = db.videos.count_documents({})
             i_count = db.ideas.count_documents({})
-            st.markdown(f"🎬 Videos: **{v_count}** | 💡 Ideas: **{i_count}**")
+            st.caption(f"🤖 `{engine}` | 🎬 **{v_count}** | 💡 **{i_count}**")
         except Exception:
-            st.error("DB Offline")
+            st.caption("🤖 `Offline` | ⚠️ DB Error")
         
-        st.divider()
-        
-        # 2. Channel Vibe (Compact)
+        # 2. Channel Vibe (Mini)
         from redline.db.repositories.rules_repo import RulesRepository
         rules = RulesRepository().get_latest_active()
         if rules:
-            v_tag = f"v{rules.version}"
-            st.markdown(f"🎭 **Rule:** `{rules.ruleset_id}` ({v_tag})")
-        
-        st.divider()
-        
-        if st.button("🚪 Logout", use_container_width=True, type="secondary"):
-            logout()
-            st.rerun()
+            st.caption(f"🎭 **Rule:** `{rules.ruleset_id}`")
             
-        st.caption("v1.5.0 | 🏁 Redline Cult")
+        st.divider()
+        # Streamlit navigation links will appear below this divider automatically
