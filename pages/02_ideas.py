@@ -115,11 +115,24 @@ if 'generating' in st.session_state and st.session_state.generating:
                     angle = "General"
                     rationale = "Potential Viral Content"
                     
+                    def clean_md(text: str) -> str:
+                        import re
+                        # Remove markdown bold/italic
+                        text = re.sub(r'\*\*|\*|__|_', '', text)
+                        # Remove leading/trailing quotes and hashtags
+                        text = text.strip().strip('"').strip("'").strip('#').strip()
+                        return text
+
                     for line in lines:
                         l_low = line.lower()
-                        if "summary:" in l_low: summary = line.split(":", 1)[1].strip()
-                        if "angle:" in l_low: angle = line.split(":", 1)[1].strip()
-                        if "rationale:" in l_low: rationale = line.split(":", 1)[1].strip()
+                        if "summary:" in l_low: 
+                            summary = clean_md(line.split(":", 1)[1])
+                        if "angle:" in l_low: 
+                            angle = clean_md(line.split(":", 1)[1])
+                        if "rationale:" in l_low: 
+                            rationale = clean_md(line.split(":", 1)[1])
+
+                    title = clean_md(title)
 
                     new_idea = Idea(
                         idea_id=str(uuid.uuid4())[:8],
@@ -204,18 +217,4 @@ if approved:
         for a in approved:
             st.write(f"- **{a.title}**")
 
-# 5. Database Heartbeat (Diagnostic)
-st.divider()
-with st.sidebar:
-    st.markdown("### 🗄️ Storage Heartbeat")
-    total_ideas = len(idea_repo.list(limit=1000))
-    new_ideas = len(idea_repo.list(filters={"status": "new"}))
-    st.metric("Total Ideas", total_ideas)
-    st.metric("New Pending", new_ideas)
-    
-    db_name = MongoManager().get_db().name
-    st.caption(f"📍 DB: `{db_name}` | Coll: `ideas`")
-    
-    if st.button("🧹 Purge Rejected", use_container_width=True):
-        idea_repo.collection.delete_many({"status": "rejected"})
-        st.rerun()
+# End of page

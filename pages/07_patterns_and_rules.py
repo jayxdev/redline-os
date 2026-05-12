@@ -46,7 +46,7 @@ with tab2:
         st.write("No patterns extracted yet.")
     else:
         for p in patterns:
-            with st.expander(f"{p.type.upper()}: {p.title} ({p.confidence} confidence)"):
+            with st.expander(f"{p.pattern_type.upper()}: {p.title} ({p.confidence} confidence)"):
                 st.markdown(p.statement)
                 st.caption(f"Evidence: {len(p.evidence_video_ids)} videos, {len(p.evidence_analysis_ids)} reviews")
                 if st.button("Archive Pattern", key=f"arch_{p.id}"):
