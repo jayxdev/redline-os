@@ -52,9 +52,27 @@ class AutomationService(WorkflowService):
                     )
                     
                     # 3. Generate Captions immediately
-                    caption_prompt = f"Generate 3 captions and hashtags for this video plan:\n{plan.model_dump_json()}"
+                    from redline.utils.prompts import load_prompt
+                    import re
+                    
+                    caption_tmpl = load_prompt("03-caption-hashtag-research.md")
+                    caption_prompt = f"{caption_tmpl}\n\nVideo Plan:\n{plan.model_dump_json()}"
                     cap_res = self.llm.generate(caption_prompt, system_prompt)
-                    new_video.post_package = PostPackage(packaging_notes=cap_res["raw_text"])
+                    full_response = cap_res["raw_text"]
+                    
+                    # Automatic parsing
+                    cap_match = re.search(r'-\s*(?:primary_caption|Caption):\s*(.*)', full_response, re.IGNORECASE)
+                    caption = cap_match.group(1).strip() if cap_match else "See packaging notes."
+                    
+                    hash_match = re.search(r'-\s*(?:hashtag_set|Hashtags used):\s*(.*)', full_response, re.IGNORECASE)
+                    hashtags_str = hash_match.group(1).strip() if hash_match else ""
+                    hashtags = [h.strip() for h in hashtags_str.split(",") if h.strip()]
+                    
+                    new_video.post_package = PostPackage(
+                        selected_caption=caption,
+                        hashtags=hashtags,
+                        packaging_notes=full_response
+                    )
                     new_video.status = "drafted"
                     
                     video_repo.create(new_video)

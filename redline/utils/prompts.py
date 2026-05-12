@@ -1,6 +1,6 @@
 import os
 
-def load_prompt(prompt_name: str, base_path: str = "prompts") -> str:
+def load_prompt(prompt_name: str, base_path: str = "redline/prompts") -> str:
     """
     Loads a prompt from the existing prompts directory.
     prompt_name should be the filename without the path.
@@ -19,9 +19,10 @@ def load_prompt(prompt_name: str, base_path: str = "prompts") -> str:
             return f.read()
     return ""
 
-def list_available_prompts(base_path: str = "prompts") -> list:
+def list_available_prompts(base_path: str = "redline/prompts") -> list:
     repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
     target_path = os.path.join(repo_root, base_path)
     if os.path.exists(target_path):
         return [f for f in os.listdir(target_path) if f.endswith(".md")]
     return []
+

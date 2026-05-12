@@ -153,7 +153,14 @@ def dashboard():
                 ca, cr = st.columns(2)
                 if ca.button("✅", key=f"app_{idea.id}", help="Approve and Launch", use_container_width=True):
                     idea_repo.update(idea.id, {"status": "selected"})
-                    st.toast(f"🚀 Launched: {idea.title}")
+                    
+                    # Trigger instant build
+                    with st.spinner(f"🚀 Building {idea.title}..."):
+                        from redline.core.automation_service import AutomationService
+                        auto_service = AutomationService()
+                        auto_service.run_daily_pipeline(trigger_type="instant-approve")
+                    
+                    st.toast(f"✅ Final Build Package Ready: {idea.title}")
                     st.rerun()
                 
                 if cr.button("❌", key=f"rej_{idea.id}", help="Permanently Delete", use_container_width=True):

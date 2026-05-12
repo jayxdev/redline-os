@@ -48,24 +48,37 @@ if st.button("Generate Packaging Options", type="primary"):
             full_response += chunk
             placeholder.markdown(full_response)
         
-        st.session_state.packaging_options = full_response
-
-if 'packaging_options' in st.session_state:
-    st.markdown("### Suggested Packaging")
-    st.markdown(st.session_state.packaging_options)
-    
-    selected_caption = st.text_area("Final Selected Caption", height=150)
-    hashtags = st.text_input("Final Hashtags (comma separated)")
-    
-    if st.button("Save Packaging"):
+        # Automatic parsing
+        import re
+        
+        # Try finding primary_caption or Caption:
+        cap_match = re.search(r'-\s*(?:primary_caption|Caption):\s*(.*)', full_response, re.IGNORECASE)
+        caption = cap_match.group(1).strip() if cap_match else "See packaging notes."
+        
+        # Try finding hashtag_set or Hashtags used:
+        hash_match = re.search(r'-\s*(?:hashtag_set|Hashtags used):\s*(.*)', full_response, re.IGNORECASE)
+        hashtags_str = hash_match.group(1).strip() if hash_match else ""
+        hashtags = [h.strip() for h in hashtags_str.split(",") if h.strip()]
+        
+        # Save directly
         updates = {
             "status": "drafted",
             "post_package": {
-                "selected_caption": selected_caption,
-                "hashtags": [h.strip() for h in hashtags.split(",")],
-                "packaging_notes": st.session_state.packaging_options
+                "selected_caption": caption,
+                "hashtags": hashtags,
+                "packaging_notes": full_response
             }
         }
         video_repo.update(video.id, updates)
-        st.success("Packaging saved!")
-        del st.session_state.packaging_options
+        st.success("✨ Packaging generated and saved automatically!")
+        st.session_state.packaging_options = full_response
+        st.rerun()
+
+if video.post_package:
+    st.markdown("### ✨ Final Build Package")
+    st.markdown(f"**Final Caption:**\n\n{video.post_package.selected_caption}")
+    st.markdown(f"**Hashtags:** {', '.join(video.post_package.hashtags) if video.post_package.hashtags else 'None'}")
+    
+    with st.expander("View Full AI Packaging Notes"):
+        st.markdown(video.post_package.packaging_notes)
+

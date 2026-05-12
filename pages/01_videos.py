@@ -22,11 +22,17 @@ else:
     st.markdown(f"### ✅ FINALIZED PACKAGES ({len(finalized)})")
     for v in finalized:
         with st.container(border=True):
-            c1, c2 = st.columns([4, 1])
+            c1, c2, c3 = st.columns([3, 1, 1])
             c1.markdown(f"#### {v.title.upper()}")
+            
             if c2.button("DETAILS", key=f"v_{v.id}", use_container_width=True):
                 st.session_state.selected_video = v.id
                 st.switch_page("pages/03_video_planner.py")
+                
+            if c3.button("🗑️ DELETE", key=f"del_{v.id}", use_container_width=True, type="secondary"):
+                video_repo.delete(v.id)
+                st.toast(f"🗑️ Incinerated: {v.title}")
+                st.rerun()
             
             st.caption(f"Status: `{v.status.upper()}` | Built: {v.created_at.strftime('%Y-%m-%d')}")
             
@@ -49,5 +55,10 @@ else:
         st.markdown(f"### ⏳ IN-BUILD ({len(in_build)})")
         for v in in_build:
             with st.container(border=True):
-                st.markdown(f"**{v.title.upper()}**")
-                st.caption(f"Status: `PLANNING` | Pipeline active...")
+                ca, cb = st.columns([4, 1])
+                ca.markdown(f"**{v.title.upper()}**")
+                ca.caption(f"Status: `PLANNING` | Pipeline active...")
+                if cb.button("🗑️ CANCEL", key=f"cancel_{v.id}", use_container_width=True, type="secondary"):
+                    video_repo.delete(v.id)
+                    st.toast(f"🗑️ Cancelled Build: {v.title}")
+                    st.rerun()
