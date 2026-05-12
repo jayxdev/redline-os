@@ -17,7 +17,20 @@ st.info("These settings are stored in MongoDB and override .env file values.")
 
 with st.expander("LLM Settings", expanded=True):
     nv_key = st.text_input("NVIDIA API Key", value=config_service.get("NVIDIA_API_KEY", ""), type="password")
-    nv_model = st.text_input("Default LLM Model", value=config_service.get("DEFAULT_LLM_MODEL", "meta/llama-3-70b-instruct"))
+    
+    # Recommended Models Dropdown
+    recommended_models = {
+        "Minimax M2.7 (Current)": "minimaxai/minimax-m2.7",
+        "Llama 3.1 405B (Smartest)": "meta/llama-3.1-405b-instruct",
+        "Mistral Large 2 (Best Tone)": "mistralai/mistral-large-2-instruct",
+        "DeepSeek V3 (Technical)": "deepseek-ai/deepseek-v3",
+        "Llama 3.1 70B (Fast/Balanced)": "meta/llama-3.1-70b-instruct"
+    }
+    
+    selected_rec = st.selectbox("Recommended Models", options=list(recommended_models.keys()), index=0)
+    default_model = recommended_models[selected_rec]
+    
+    nv_model = st.text_input("Model ID", value=config_service.get("DEFAULT_LLM_MODEL", default_model))
     if st.button("Save LLM Settings"):
         config_service.set("NVIDIA_API_KEY", nv_key, "API Key for NVIDIA LLM")
         config_service.set("DEFAULT_LLM_MODEL", nv_model, "Primary model used for generations")
