@@ -90,27 +90,35 @@ if 'generating' in st.session_state and st.session_state.generating:
             
             st.success("Generation complete! Saving to database...")
             
-            # Simple parser to extract ideas
+            # Resilient Parser
             try:
                 import re
-                # Look for Title/Summary/Angle/Rationale patterns
-                raw_ideas = re.split(r'Idea \d+:|Title:', full_response)
-                for raw in raw_ideas:
-                    if len(raw.strip()) < 20: continue
+                parsed_count = 0
+                
+                # Split by common idea delimiters
+                blocks = re.split(r'(?i)Idea \d+:|Idea:|Title:|\d+\. ', full_response)
+                
+                for block in blocks:
+                    clean_block = block.strip()
+                    if len(clean_block) < 30: continue # Skip fragments
                     
-                    title = "New Idea"
-                    summary = "AI Generated Idea"
-                    angle = "Standard"
-                    rationale = "Viral Potential"
+                    # Extract fields with flexible lookups
+                    lines = [l.strip() for l in clean_block.split('\n') if l.strip()]
+                    if not lines: continue
                     
-                    # Extract fields using simple regex/string splits
-                    lines = raw.strip().split('\n')
-                    title = lines[0].replace('-', '').strip()
+                    # HEURISTIC: First line is the title, clean it up
+                    title = lines[0].replace('**', '').replace('-', '').replace('#', '').strip()[:100]
+                    if not title: title = "Unnamed Idea"
+                    
+                    summary = "AI Generated"
+                    angle = "General"
+                    rationale = "Potential Viral Content"
                     
                     for line in lines:
-                        if "Summary:" in line: summary = line.split("Summary:")[1].strip()
-                        if "Angle:" in line: angle = line.split("Angle:")[1].strip()
-                        if "Rationale:" in line: rationale = line.split("Rationale:")[1].strip()
+                        l_low = line.lower()
+                        if "summary:" in l_low: summary = line.split(":", 1)[1].strip()
+                        if "angle:" in l_low: angle = line.split(":", 1)[1].strip()
+                        if "rationale:" in l_low: rationale = line.split(":", 1)[1].strip()
 
                     new_idea = Idea(
                         idea_id=str(uuid.uuid4())[:8],
@@ -121,10 +129,28 @@ if 'generating' in st.session_state and st.session_state.generating:
                         status="new"
                     )
                     idea_repo.create(new_idea)
+                    st.toast(f"💾 Stored: {title}", icon="✅")
+                    parsed_count += 1
                 
-                st.success(f"Successfully saved new ideas to the database.")
+                if parsed_count > 0:
+                    st.success(f"✅ Successfully stored {parsed_count} ideas in the database.")
+                else:
+                    # FAIL-SAFE: Save raw text as one big idea
+                    fallback_idea = Idea(
+                        idea_id=f"raw-{str(uuid.uuid4())[:4]}",
+                        title=f"Bulk Generation - {datetime.now().strftime('%H:%M')}",
+                        summary="Parsing failed, saving raw text for manual review.",
+                        angle="Raw Output",
+                        rationale="Fail-safe backup",
+                        status="new"
+                    )
+                    # We store the raw text in the rationale or a new field
+                    fallback_idea.rationale = full_response
+                    idea_repo.create(fallback_idea)
+                    st.warning("⚠️ Could not split ideas, saved the entire response as one record.")
+                    
             except Exception as e:
-                st.warning(f"Saved raw text, but parsing failed: {str(e)}")
+                st.error(f"❌ Storage Failed: {str(e)}")
     
     if st.button("Finish & Refresh"):
         st.session_state.generating = False
@@ -165,8 +191,8 @@ else:
                         st.rerun()
             
             if c2.button("Reject ❌", key=f"rej_{idea.id}", use_container_width=True):
-                idea_repo.update(idea.id, {"status": "rejected"})
-                st.toast(f"Discarded: {idea.title}")
+                idea_repo.delete(idea.id)
+                st.toast(f"🗑️ Permanently Deleted: {idea.title}")
                 st.rerun()
 
 # Show Approved Queue (Ready for the next Pipeline run)
@@ -176,3 +202,19 @@ if approved:
     with st.expander(f"📥 Approved Queue ({len(approved)}) - Ready for Production", expanded=False):
         for a in approved:
             st.write(f"- **{a.title}**")
+
+# 5. Database Heartbeat (Diagnostic)
+st.divider()
+with st.sidebar:
+    st.markdown("### 🗄️ Storage Heartbeat")
+    total_ideas = len(idea_repo.list(limit=1000))
+    new_ideas = len(idea_repo.list(filters={"status": "new"}))
+    st.metric("Total Ideas", total_ideas)
+    st.metric("New Pending", new_ideas)
+    
+    db_name = MongoManager().get_db().name
+    st.caption(f"📍 DB: `{db_name}` | Coll: `ideas`")
+    
+    if st.button("🧹 Purge Rejected", use_container_width=True):
+        idea_repo.collection.delete_many({"status": "rejected"})
+        st.rerun()
