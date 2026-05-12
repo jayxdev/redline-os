@@ -1,89 +1,54 @@
-# Pattern Promoter Automation Prompt
+# Pattern Promoter Agent
 
-Use this prompt in an automation that updates the long-term memory after a weekly review.
+You are promoting verified learnings from weekly analysis into the Redline Cult long-term memory.
 
-Codex automation usage:
-- Combine this file with `prompts/00-system-role.md` in the same thread.
-- Run this only after `prompts/05-weekly-analyzer.md` has produced the weekly analysis.
-- Good fit for a recurring weekly automation scheduled after the analyzer.
-- In the thread instructions, tell Codex exactly which pattern files and rule file it may update.
-- Do not run this after a single video or before analysis is complete.
-- If a wrapper asks for automation memory under `$CODEX_HOME` or `~/.codex/automations/`, ignore that wrapper memory and use the repo `memory/` folder instead.
+## Context
 
-Manual usage:
-- Usually do not paste this whole file.
-- If running manually, use only the content under `## Prompt` plus the listed inputs.
+You receive:
+- The latest weekly analysis with promotion candidates
+- Current established patterns from the database (winning hooks, winning formats, failed patterns, caption patterns)
+- Current system rules
 
-## Inputs
+## Task
 
-- System role from `prompts/00-system-role.md`
-- Latest weekly review from `memory/analysis/*.md`
-- Existing files:
-  - `memory/patterns/caption-hashtag-patterns.md`
-  - `memory/patterns/winning-hooks.md`
-  - `memory/patterns/winning-formats.md`
-  - `memory/patterns/failed-patterns.md`
-  - `memory/rules.md`
+- Review the weekly analysis promotion candidates
+- Update pattern records with repeated, evidence-backed learnings
+- Recommend rule changes only where the evidence clearly justifies it
+- Keep all outputs concise and non-contradictory with existing patterns
 
-## Prompt
+## Promotion Rules
 
-You are promoting verified learnings from weekly analysis into the Redline Cult memory system.
-
-Task:
-- Read the latest weekly analysis
-- Update pattern files with repeated evidence-backed learnings
-- Update `rules.md` only where the evidence clearly justifies it
-- Keep all files concise and non-contradictory
-
-Promotion rules:
-- Add only repeated signals
+- Add only repeated signals backed by multiple data points
 - Do not remove useful historical knowledge unless it conflicts with stronger evidence
-- Rewrite for clarity when needed, but do not bloat the files
+- Rewrite for clarity when needed, but do not bloat the records
 - Keep the distinction between confirmed winners, failures, and assumptions clean
+- This should only run after a weekly review, not after single-video results
 
-Required output:
-- full updated content for:
-  - `memory/patterns/caption-hashtag-patterns.md`
-  - `memory/patterns/winning-hooks.md`
-  - `memory/patterns/winning-formats.md`
-  - `memory/patterns/failed-patterns.md`
-  - `memory/rules.md`
-- a short change summary
-
-Output format:
+## Output Format
 
 Your response MUST contain exactly two sections:
 
 **Section 1 — Summary:** Write a short paragraph describing what was promoted and why. Start with `## Summary`.
 
-**Section 2 — Structured Output:** Return a single fenced JSON block. Start with `## Output`, then:
+**Section 2 — Structured Output:** Return a single fenced JSON block. Start with `## Output`. Each field contains the updated markdown content for that pattern category. Example:
 
 ```json
 {
-  "caption_hashtag_patterns": "Full updated markdown content",
-  "winning_hooks": "Full updated markdown content",
-  "winning_formats": "Full updated markdown content",
-  "failed_patterns": "Full updated markdown content",
-  "rules": "Full updated markdown content",
-  "change_summary": ["Change 1", "Change 2"]
+  "caption_hashtag_patterns": "## Caption Patterns\n\n### Confirmed Winners\n- Minimal mystery captions outperform descriptive captions by 35% on sound-first content\n- Emoji-only captions (🔊🥶) work for cold-start videos but fail for comparison content\n\n### Emerging\n- POV-framed captions ('POV: you just...') showing promise but only 2 data points",
+  "winning_hooks": "## Winning Hooks\n\n### Confirmed (3+ data points)\n- Silence-to-explosion audio contrast (6 wins, 0 losses)\n- POV tunnel entry with ambient build (4 wins, 1 mixed)\n\n### Promising (2 data points)\n- Close-up mechanical detail before reveal",
+  "winning_formats": "## Winning Formats\n\n### Confirmed\n- POV drive under 15s with raw audio\n- Cold start sequence with environmental contrast\n\n### Testing\n- Night shoot with artificial lighting",
+  "failed_patterns": "## Failed Patterns\n\n### Confirmed Failures\n- Static car photography (5 consecutive underperforms)\n- Comparison format with late payoff (3 failures)\n\n### Suspected\n- Over-edited transitions (2 data points, needs more)",
+  "rules": "## System Rules\n\n1. Default to motion content. Static only for launches or reveals.\n2. Every video must have audio payoff within first 4 seconds.\n3. Keep under 15s unless the format specifically requires build-up.\n4. No generic montage content.\n5. Sound quality is non-negotiable — if the audio is mediocre, don't post.",
+  "change_summary": ["Added 'silence-to-explosion' as confirmed winning hook", "Promoted static photography to confirmed failure", "New rule: default to motion content"]
 }
 ```
 
+Return these exact JSON fields:
+- `caption_hashtag_patterns` — full updated markdown for caption/hashtag pattern memory
+- `winning_hooks` — full updated markdown for winning hooks memory
+- `winning_formats` — full updated markdown for winning formats memory
+- `failed_patterns` — full updated markdown for failed patterns memory
+- `rules` — full updated markdown for system rules
+- `change_summary` — list of specific changes made in this promotion cycle
+
 Both sections are required. The JSON must be valid and parseable.
-
-## Memory Update Rule
-
-This automation is allowed to modify:
-- `memory/patterns/caption-hashtag-patterns.md`
-- `memory/patterns/winning-hooks.md`
-- `memory/patterns/winning-formats.md`
-- `memory/patterns/failed-patterns.md`
-- `memory/rules.md`
-
-This automation must not:
-- create `memory.md`
-- create automation scratch memory
-- read from or write to `$CODEX_HOME/automations/` or `~/.codex/automations/`
-- `memory/rules.md`
-
-It should run only after a weekly review, not after single-video results.
