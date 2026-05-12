@@ -1,6 +1,7 @@
 from openai import OpenAI
 from typing import Dict, Any, Optional
 import json
+import httpx
 from .base import LLMProvider
 
 class NVIDIAProvider(LLMProvider):
@@ -8,10 +9,13 @@ class NVIDIAProvider(LLMProvider):
         self.api_key = api_key.strip() if api_key else ""
         self.model_name = model_name.strip() if model_name else ""
         
-        # Standard NVIDIA NIM Gateway
+        # Using a custom HTTP client to handle timeouts and robust connectivity
+        self.http_client = httpx.Client(timeout=30.0)
+        
         self.client = OpenAI(
             base_url="https://integrate.api.nvidia.com/v1",
-            api_key=self.api_key
+            api_key=self.api_key,
+            http_client=self.http_client
         )
 
     def generate(self, prompt: str, system_prompt: Optional[str] = None) -> Dict[str, Any]:
@@ -58,4 +62,4 @@ class NVIDIAProvider(LLMProvider):
                 }
             }
         except Exception as e:
-            raise Exception(f"NVIDIA API Error: {str(e)}")
+            raise Exception(f"NVIDIA Library Error: {str(e)}")
