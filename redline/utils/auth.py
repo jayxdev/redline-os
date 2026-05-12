@@ -3,13 +3,17 @@ import os
 import extra_streamlit_components as stx
 from datetime import datetime, timedelta
 
+@st.cache_resource
 def get_cookie_manager():
-    return stx.CookieManager()
+    return stx.CookieManager(key="redline_cookie_manager")
 
 def check_password():
     """Returns `True` if the user had the correct password (via session or cookie)."""
     
+    from redline.core.config_service import ConfigService
+    config = ConfigService()
     cookie_manager = get_cookie_manager()
+    correct_password = config.get("APP_PASSWORD", "admin")
     
     # Check if already authenticated in session
     if st.session_state.get("password_correct"):
@@ -17,7 +21,7 @@ def check_password():
     
     # Check if authenticated via cookie
     auth_cookie = cookie_manager.get("redline_auth")
-    if auth_cookie == os.getenv("APP_PASSWORD", "admin"):
+    if auth_cookie == correct_password:
         st.session_state["password_correct"] = True
         return True
 
@@ -27,7 +31,6 @@ def check_password():
         if not user_input:
             return
             
-        correct_password = os.getenv("APP_PASSWORD", "admin")
         if user_input == correct_password:
             st.session_state["password_correct"] = True
             # Set cookie to expire in 24 hours
