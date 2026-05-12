@@ -19,7 +19,7 @@ def draw_sidebar():
             db = MongoManager().get_db()
             v_count = db.videos.count_documents({})
             i_count = db.ideas.count_documents({})
-            st.markdown(f"📊 Projects: **{v_count}** | Ideas: **{i_count}**")
+            st.markdown(f"🎬 Videos: **{v_count}** | 💡 Ideas: **{i_count}**")
         except Exception:
             st.error("DB Offline")
         
@@ -29,8 +29,8 @@ def draw_sidebar():
         from redline.db.repositories.rules_repo import RulesRepository
         rules = RulesRepository().get_latest_active()
         if rules:
-            rule_title = rules.title[:25] + "..." if len(rules.title) > 25 else rules.title
-            st.markdown(f"🎭 **Rule:** {rule_title}")
+            v_tag = f"v{rules.version}"
+            st.markdown(f"🎭 **Rule:** `{rules.ruleset_id}` ({v_tag})")
         
         st.divider()
         
