@@ -1,6 +1,6 @@
 from typing import Generic, TypeVar, List, Optional, Any, Dict
 from pydantic import BaseModel
-from cloud_build.providers.mongo.client import MongoManager
+from providers.mongo.client import MongoManager
 
 T = TypeVar('T', bound=BaseModel)
 

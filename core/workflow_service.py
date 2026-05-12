@@ -1,7 +1,7 @@
-from cloud_build.core.config_service import ConfigService
-from cloud_build.providers.llm.nvidia_provider import NVIDIAProvider
-from cloud_build.db.repositories.rules_repo import RulesRepository
-from cloud_build.utils.prompts import load_prompt
+from core.config_service import ConfigService
+from providers.llm.nvidia_provider import NVIDIAProvider
+from db.repositories.rules_repo import RulesRepository
+from utils.prompts import load_prompt
 
 class WorkflowService:
     def __init__(self):

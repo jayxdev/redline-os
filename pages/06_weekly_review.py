@@ -1,10 +1,10 @@
 import streamlit as st
-from cloud_build.db.repositories.videos_repo import VideoRepository
-from cloud_build.db.repositories.base_repo import BaseRepository
-from cloud_build.models.weekly_analysis import WeeklyAnalysis
-from cloud_build.utils.auth import check_password
-from cloud_build.providers.llm.nvidia_provider import NVIDIAProvider
-from cloud_build.utils.prompts import load_prompt
+from db.repositories.videos_repo import VideoRepository
+from db.repositories.base_repo import BaseRepository
+from models.weekly_analysis import WeeklyAnalysis
+from utils.auth import check_password
+from providers.llm.nvidia_provider import NVIDIAProvider
+from utils.prompts import load_prompt
 from datetime import datetime, timedelta
 import os
 

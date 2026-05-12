@@ -2,9 +2,9 @@ import os
 import re
 import uuid
 from datetime import datetime
-from cloud_build.providers.mongo.client import MongoManager
-from cloud_build.models.idea import Idea
-from cloud_build.models.video import Video, VideoPlan, PostPackage, VideoMetrics
+from providers.mongo.client import MongoManager
+from models.idea import Idea
+from models.video import Video, VideoPlan, PostPackage, VideoMetrics
 
 def parse_ideas(content):
     ideas = []

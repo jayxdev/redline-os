@@ -1,11 +1,11 @@
 import streamlit as st
-from cloud_build.db.repositories.base_repo import BaseRepository
-from cloud_build.models.idea import Idea
-from cloud_build.providers.llm.nvidia_provider import NVIDIAProvider
-from cloud_build.utils.auth import check_password
+from db.repositories.base_repo import BaseRepository
+from models.idea import Idea
+from providers.llm.nvidia_provider import NVIDIAProvider
+from utils.auth import check_password
 import os
 
-from cloud_build.utils.ui import draw_sidebar
+from utils.ui import draw_sidebar
 
 if not check_password():
     st.stop()

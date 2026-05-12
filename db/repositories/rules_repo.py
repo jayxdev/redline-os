@@ -1,5 +1,5 @@
 from .base_repo import BaseRepository
-from cloud_build.models.rules_memory import RulesMemory
+from models.rules_memory import RulesMemory
 
 class RulesRepository(BaseRepository[RulesMemory]):
     def __init__(self):

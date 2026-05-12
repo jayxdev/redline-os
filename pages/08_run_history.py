@@ -1,7 +1,7 @@
 import streamlit as st
-from cloud_build.db.repositories.base_repo import BaseRepository
-from cloud_build.models.run_log import RunLog
-from cloud_build.utils.auth import check_password
+from db.repositories.base_repo import BaseRepository
+from models.run_log import RunLog
+from utils.auth import check_password
 
 if not check_password():
     st.stop()

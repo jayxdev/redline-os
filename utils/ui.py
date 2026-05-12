@@ -1,5 +1,5 @@
 import streamlit as st
-from cloud_build.utils.auth import logout
+from utils.auth import logout
 
 def draw_sidebar():
     st.sidebar.title("🏎️ Redline Cult OS")

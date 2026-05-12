@@ -1,6 +1,6 @@
 import streamlit as st
 import os
-from cloud_build.providers.telegram.client import TelegramClient
+from providers.telegram.client import TelegramClient
 
 st.title("🔗 Remote Trigger")
 

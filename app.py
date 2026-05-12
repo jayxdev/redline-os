@@ -1,13 +1,13 @@
 import streamlit as st
 import os
 from dotenv import load_dotenv
-from cloud_build.providers.mongo.client import MongoManager
-from cloud_build.db.repositories.base_repo import BaseRepository
-from cloud_build.models.idea import Idea
-from cloud_build.models.video import Video
-from cloud_build.models.run_log import RunLog
-from cloud_build.db.repositories.run_log_repo import RunLogRepository
-from cloud_build.utils.auth import check_password
+from providers.mongo.client import MongoManager
+from db.repositories.base_repo import BaseRepository
+from models.idea import Idea
+from models.video import Video
+from models.run_log import RunLog
+from db.repositories.run_log_repo import RunLogRepository
+from utils.auth import check_password
 from datetime import datetime, timedelta
 
 # Load environment variables
@@ -87,7 +87,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Sidebar
-from cloud_build.utils.ui import draw_sidebar
+from utils.ui import draw_sidebar
 draw_sidebar()
 
 # Dashboard Header

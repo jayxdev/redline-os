@@ -1,5 +1,5 @@
 from .base_repo import BaseRepository
-from cloud_build.models.video import Video
+from models.video import Video
 
 class VideoRepository(BaseRepository[Video]):
     def __init__(self):

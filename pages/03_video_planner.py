@@ -1,8 +1,8 @@
 import streamlit as st
-from cloud_build.db.repositories.ideas_repo import IdeaRepository
-from cloud_build.db.repositories.videos_repo import VideoRepository
-from cloud_build.core.planner_service import PlannerService
-from cloud_build.utils.auth import check_password
+from db.repositories.ideas_repo import IdeaRepository
+from db.repositories.videos_repo import VideoRepository
+from core.planner_service import PlannerService
+from utils.auth import check_password
 from datetime import datetime
 
 if not check_password():
@@ -67,7 +67,7 @@ if 'current_plan' in st.session_state:
             "updated_at": datetime.utcnow()
         }
         # In a real impl, we'd use the model and repo properly
-        from cloud_build.models.video import Video
+        from models.video import Video
         video_repo.create(Video(**new_video))
         
         # Mark idea as archived/processed

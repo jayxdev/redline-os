@@ -1,6 +1,6 @@
 import streamlit as st
-from cloud_build.db.repositories.videos_repo import VideoRepository
-from cloud_build.utils.auth import check_password
+from db.repositories.videos_repo import VideoRepository
+from utils.auth import check_password
 from datetime import datetime
 
 if not check_password():
