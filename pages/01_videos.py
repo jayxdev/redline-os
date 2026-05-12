@@ -22,14 +22,10 @@ else:
     st.markdown(f"### ✅ FINALIZED PACKAGES ({len(finalized)})")
     for v in finalized:
         with st.container(border=True):
-            c1, c2, c3 = st.columns([3, 1, 1])
+            c1, c2 = st.columns([4, 1])
             c1.markdown(f"#### {v.title.upper()}")
             
-            if c2.button("DETAILS", key=f"v_{v.id}", use_container_width=True):
-                st.session_state.selected_video = v.id
-                st.switch_page("pages/03_video_planner.py")
-                
-            if c3.button("🗑️ DELETE", key=f"del_{v.id}", use_container_width=True, type="secondary"):
+            if c2.button("🗑️ DELETE", key=f"del_{v.id}", use_container_width=True, type="secondary"):
                 video_repo.delete(v.id)
                 st.toast(f"🗑️ Incinerated: {v.title}")
                 st.rerun()
@@ -40,15 +36,26 @@ else:
                 tab1, tab2 = st.tabs(["SCRIPT & PLAN", "SOCIAL PACKAGE"])
                 with tab1:
                     if v.plan:
-                        st.markdown(f"**HOOK:** {v.plan.hook}")
-                        st.markdown(f"**CONCEPT:**\n{v.plan.concept}")
+                        st.markdown("**HOOK**")
+                        st.code(v.plan.hook, language="markdown")
+                        st.markdown("**CONCEPT**")
+                        st.code(v.plan.concept, language="markdown")
+                        st.markdown("**BEATS**")
                         if v.plan.beats:
-                            st.markdown("**BEATS:**\n- " + "\n- ".join(v.plan.beats))
+                            st.code("\n".join([f"- {b}" for b in v.plan.beats]), language="markdown")
                     else:
                         st.warning("No plan data found.")
                 with tab2:
                     if v.post_package:
-                        st.markdown(v.post_package.packaging_notes)
+                        if v.post_package.selected_caption:
+                            st.markdown("**CAPTION**")
+                            st.code(v.post_package.selected_caption, language="markdown")
+                        if v.post_package.hashtags:
+                            st.markdown("**HASHTAGS**")
+                            st.code(" ".join(v.post_package.hashtags), language="markdown")
+                        
+                        with st.expander("View Raw Packaging Strategy"):
+                            st.markdown(v.post_package.packaging_notes)
                     else:
                         st.warning("Social package not built yet.")
 
