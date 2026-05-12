@@ -16,13 +16,14 @@ def draw_sidebar():
             
         # Unified Stats Row
         current_model = config.get("DEFAULT_LLM_MODEL", "Llama 3.3")
-        engine = current_model.split("/")[-1].split("-")[0].title()
+        engine = current_model.split("/")[-1]
         
         try:
             db = MongoManager().get_db()
             v_count = db.videos.count_documents({})
             i_count = db.ideas.count_documents({})
-            st.caption(f"🤖 `{engine}` | 🎬 **{v_count}** | 💡 **{i_count}**")
+            st.caption(f"🤖 `{engine}`")
+            st.caption(f"🎬 **{v_count}** Videos | 💡 **{i_count}** Ideas")
         except Exception:
             st.caption("🤖 `Offline` | ⚠️ DB Error")
         
