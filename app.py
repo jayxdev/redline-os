@@ -97,10 +97,27 @@ def dashboard():
     with col_a:
         st.markdown('<div class="card">', unsafe_allow_html=True)
         st.subheader("🤖 ACTIVE AGENTS")
+        # Dynamic Agent Status based on Queues
+        new_ideas_count = idea_repo.collection.count_documents({"status": "new"})
+        selected_ideas_count = idea_repo.collection.count_documents({"status": "selected"})
+        planned_videos_count = video_repo.collection.count_documents({"status": "planned"})
+        
+        # Idea Generator: Active if queue is low
+        idea_status = "Active" if new_ideas_count < 3 else "Standby"
+        idea_act = "Hunting new trends..." if idea_status == "Active" else f"{new_ideas_count} ideas ready."
+        
+        # Planner: Active if there are approved ideas
+        plan_status = "Processing" if selected_ideas_count > 0 else "Idle"
+        plan_act = f"Building {selected_ideas_count} plans..." if plan_status == "Processing" else "Waiting for approval."
+        
+        # Caption Agent: Active if videos need packaging
+        cap_status = "Processing" if planned_videos_count > 0 else "Idle"
+        cap_act = f"Packaging {planned_videos_count} videos..." if cap_status == "Processing" else "Waiting for plans."
+
         agents = [
-            {"name": "Idea Generator", "status": "Online", "activity": "Scanning trends & generating concepts..."},
-            {"name": "Video Planner", "status": "Online", "activity": "Building structured plans & hooks..."},
-            {"name": "Caption Agent", "status": "Online", "activity": "Crafting packaging & hashtags..."}
+            {"name": "Idea Generator", "status": "Online" if idea_status == "Active" else "Standby", "activity": idea_act},
+            {"name": "Video Planner", "status": "Online" if plan_status == "Processing" else "Idle", "activity": plan_act},
+            {"name": "Caption Agent", "status": "Online" if cap_status == "Processing" else "Idle", "activity": cap_act}
         ]
         for agent in agents:
             badge_class = "status-online" if agent["status"] == "Online" else "status-idle"
