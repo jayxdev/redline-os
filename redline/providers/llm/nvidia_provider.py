@@ -1,47 +1,39 @@
-import requests
-import json
+from openai import OpenAI
 from typing import Dict, Any, Optional
+import json
 from .base import LLMProvider
 
 class NVIDIAProvider(LLMProvider):
-    def __init__(self, api_key: str, model_name: str = "meta/llama-3-70b-instruct"):
+    def __init__(self, api_key: str, model_name: str = "minimaxai/minimax-m2.7"):
         self.api_key = api_key
         self.model_name = model_name
-        self.base_url = "https://integrate.api.nvidia.com/v1/chat/completions"
+        self.client = OpenAI(
+            base_url="https://integrate.api.nvidia.com/v1",
+            api_key=api_key
+        )
 
     def generate(self, prompt: str, system_prompt: Optional[str] = None) -> Dict[str, Any]:
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-        }
-
         messages = []
         if system_prompt:
             messages.append({"role": "system", "content": system_prompt})
         messages.append({"role": "user", "content": prompt})
 
-        payload = {
-            "model": self.model_name,
-            "messages": messages,
-            "temperature": 0.5,
-            "top_p": 1,
-            "max_tokens": 1024,
-            "stream": False
-        }
-
         try:
-            response = requests.post(self.base_url, headers=headers, json=payload)
-            response.raise_for_status()
-            data = response.json()
+            completion = self.client.chat.completions.create(
+                model=self.model_name,
+                messages=messages,
+                temperature=0.7,
+                top_p=0.95,
+                max_tokens=2048,
+                stream=False
+            )
 
-            raw_text = data["choices"][0]["message"]["content"]
+            raw_text = completion.choices[0].message.content
             
-            # Simple heuristic for JSON parsing if the prompt expects it
+            # Simple heuristic for JSON parsing
             parsed_data = None
             if "{" in raw_text and "}" in raw_text:
                 try:
-                    # Find potential JSON block
                     start = raw_text.find("{")
                     end = raw_text.rfind("}") + 1
                     json_str = raw_text[start:end]
@@ -55,8 +47,12 @@ class NVIDIAProvider(LLMProvider):
                 "model_name": self.model_name,
                 "provider_name": "nvidia",
                 "metadata": {
-                    "usage": data.get("usage", {}),
-                    "id": data.get("id")
+                    "id": completion.id,
+                    "usage": {
+                        "prompt_tokens": completion.usage.prompt_tokens,
+                        "completion_tokens": completion.usage.completion_tokens,
+                        "total_tokens": completion.usage.total_tokens
+                    } if hasattr(completion, 'usage') else {}
                 }
             }
         except Exception as e:
