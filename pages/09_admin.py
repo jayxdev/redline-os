@@ -31,6 +31,7 @@ with st.expander("LLM Settings", expanded=True):
             try:
                 from redline.providers.llm.nvidia_provider import NVIDIAProvider
                 with st.spinner("Testing connectivity..."):
+                    tester = NVIDIAProvider(nv_key, nv_model)
                     response_data = tester.generate("Hello, respond with 'SUCCESS' if you can read this.")
                     raw_text = response_data.get("raw_text", "No response")
                     if raw_text:
