@@ -51,13 +51,41 @@ else:
                         if not options and v.post_package.selected_caption:
                             options = [v.post_package.selected_caption]
                             
-                        if options:
-                            st.markdown("**CAPTION OPTIONS**")
-                            for idx, opt in enumerate(options):
-                                st.code(opt, language="markdown")
+                        if options and len(options) > 1:
+                            # Build labels for the radio
+                            labels = [f"Option {i+1}" for i in range(len(options))]
+                            
+                            # Find current selection index
+                            current_idx = 0
+                            if v.post_package.selected_caption in options:
+                                current_idx = options.index(v.post_package.selected_caption)
+                            
+                            st.markdown("**SELECT CAPTION**")
+                            chosen = st.radio(
+                                "Pick your caption variant:",
+                                options,
+                                index=current_idx,
+                                format_func=lambda x: x[:80] + "..." if len(x) > 80 else x,
+                                key=f"cap_radio_{v.id}",
+                                label_visibility="collapsed"
+                            )
+                            
+                            # Save selection if changed
+                            if chosen != v.post_package.selected_caption:
+                                video_repo.collection.update_one(
+                                    {"id": v.id},
+                                    {"$set": {"post_package.selected_caption": chosen}}
+                                )
+                                st.toast("✅ Caption locked!")
+                            
+                            st.markdown("**SELECTED CAPTION** *(copy below)*")
+                            st.code(chosen, language="markdown")
+                        elif options:
+                            st.markdown("**CAPTION**")
+                            st.code(options[0], language="markdown")
                                 
                         if v.post_package.hashtags:
-                            st.markdown("**HASHTAGS**")
+                            st.markdown("**HASHTAGS** *(copy below)*")
                             st.code(" ".join(v.post_package.hashtags), language="markdown")
                         
                         with st.expander("View Raw Packaging Strategy"):
