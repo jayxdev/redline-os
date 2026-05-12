@@ -23,12 +23,16 @@ class MongoManager:
             import streamlit as st
             
             # 1. Try Streamlit Secrets
+            uri = None
+            db_name = "redline_cult"
             try:
-                uri = st.secrets.get("MONGODB_URI")
-                db_name = st.secrets.get("MONGODB_DB_NAME", "redline_cult")
-            except:
-                uri = None
-                db_name = None
+                # Use getattr and get to be extremely safe against KeyErrors on Cloud
+                if hasattr(st, "secrets"):
+                    uri = st.secrets.get("MONGODB_URI")
+                    db_name = st.secrets.get("MONGODB_DB_NAME", "redline_cult")
+            except Exception:
+                # Fallback silently if secrets aren't ready
+                pass
 
             # 2. Fallback to .env and environment
             if not uri:

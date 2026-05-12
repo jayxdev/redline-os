@@ -14,8 +14,12 @@ draw_sidebar()
 
 st.title("💡 Idea Generation")
 
-# Repository
-idea_repo = BaseRepository("ideas", Idea)
+# Repositories
+@st.cache_resource
+def get_idea_repo():
+    return BaseRepository("ideas", Idea)
+
+idea_repo = get_idea_repo()
 
 # LLM Provider
 def get_llm():

@@ -10,7 +10,11 @@ if not check_password():
 
 st.title("🏷️ Caption & Hashtags")
 
-video_repo = VideoRepository()
+@st.cache_resource
+def get_video_repo():
+    return VideoRepository()
+
+video_repo = get_video_repo()
 videos = video_repo.list(filters={"status": "planned"})
 
 if not videos:

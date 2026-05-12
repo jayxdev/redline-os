@@ -16,9 +16,9 @@ class ConfigService:
         
         # 1. Try Streamlit Secrets
         try:
-            if key in st.secrets:
+            if hasattr(st, "secrets") and key in st.secrets:
                 return str(st.secrets[key])
-        except:
+        except Exception:
             pass
 
         # 2. Try Database
