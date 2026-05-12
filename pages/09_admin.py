@@ -18,7 +18,7 @@ st.info("These settings are stored in MongoDB and override .env file values.")
 with st.expander("LLM Settings", expanded=True):
     nv_key = st.text_input("NVIDIA API Key", value=config_service.get("NVIDIA_API_KEY", ""), type="password")
     
-    # Recommended Models Dropdown
+    # Recommended Models Mapping
     recommended_models = {
         "Minimax M2.7 (Current)": "minimaxai/minimax-m2.7",
         "Llama 3.1 405B (Smartest)": "meta/llama-3.1-405b-instruct",
@@ -27,10 +27,21 @@ with st.expander("LLM Settings", expanded=True):
         "Llama 3.1 70B (Fast/Balanced)": "meta/llama-3.1-70b-instruct"
     }
     
-    selected_rec = st.selectbox("Recommended Models", options=list(recommended_models.keys()), index=0)
-    default_model = recommended_models[selected_rec]
+    # Selection logic
+    def update_model_id():
+        st.session_state.nv_model_input = recommended_models[st.session_state.selected_rec_key]
+
+    selected_rec = st.selectbox(
+        "Recommended Models", 
+        options=list(recommended_models.keys()), 
+        key="selected_rec_key",
+        on_change=update_model_id
+    )
     
-    nv_model = st.text_input("Model ID", value=config_service.get("DEFAULT_LLM_MODEL", default_model))
+    if "nv_model_input" not in st.session_state:
+        st.session_state.nv_model_input = config_service.get("DEFAULT_LLM_MODEL", recommended_models[selected_rec])
+
+    nv_model = st.text_input("Model ID", key="nv_model_input")
     if st.button("Save LLM Settings"):
         config_service.set("NVIDIA_API_KEY", nv_key, "API Key for NVIDIA LLM")
         config_service.set("DEFAULT_LLM_MODEL", nv_model, "Primary model used for generations")
