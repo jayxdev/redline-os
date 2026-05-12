@@ -61,12 +61,12 @@ else:
                                 current_idx = options.index(v.post_package.selected_caption)
                             
                             st.markdown("**SELECT CAPTION**")
-                            chosen = st.radio(
+                            chosen = st.selectbox(
                                 "Pick your caption variant:",
                                 options,
                                 index=current_idx,
                                 format_func=lambda x: x[:80] + "..." if len(x) > 80 else x,
-                                key=f"cap_radio_{v.id}",
+                                key=f"cap_select_{v.id}",
                                 label_visibility="collapsed"
                             )
                             
