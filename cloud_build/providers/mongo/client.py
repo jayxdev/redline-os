@@ -20,12 +20,22 @@ class MongoManager:
 
     def get_db(self):
         if not self._initialized:
-            # Auto-initialize from env if possible
-            dotenv_path = os.path.join(os.path.dirname(__file__), '../../..', '.env')
-            load_dotenv(dotenv_path)
+            import streamlit as st
             
-            uri = os.getenv("MONGODB_URI")
-            db_name = os.getenv("MONGODB_DB_NAME", "redline_cult")
+            # 1. Try Streamlit Secrets
+            try:
+                uri = st.secrets.get("MONGODB_URI")
+                db_name = st.secrets.get("MONGODB_DB_NAME", "redline_cult")
+            except:
+                uri = None
+                db_name = None
+
+            # 2. Fallback to .env and environment
+            if not uri:
+                dotenv_path = os.path.join(os.path.dirname(__file__), '../../..', '.env')
+                load_dotenv(dotenv_path)
+                uri = os.getenv("MONGODB_URI")
+                db_name = os.getenv("MONGODB_DB_NAME", "redline_cult")
             
             if uri:
                 self.initialize(uri, db_name)
