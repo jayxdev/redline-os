@@ -42,7 +42,27 @@ selected_vids = st.multiselect("Confirm videos to include:",
                                [v.title for v in videos], 
                                default=[v.title for v in videos])
 
-if st.button("Run Weekly Analysis", type="primary"):
+# 3. Synthesis Chat (Memory Integration)
+st.divider()
+st.subheader("🧠 Performance Synthesis Chat")
+st.caption("Tell the AI about your manual observations (e.g., 'The thumbnail for Video X was the reason it blew up').")
+
+if "weekly_chat" not in st.session_state:
+    st.session_state.weekly_chat = []
+
+# Display chat history
+for msg in st.session_state.weekly_chat:
+    with st.chat_message(msg["role"]):
+        st.markdown(msg["content"])
+
+# Chat Input
+user_input = st.chat_input("What did you learn this week?")
+
+if user_input:
+    # Add to history
+    st.session_state.weekly_chat.append({"role": "user", "content": user_input})
+    
+    # Prepare context for AI
     selected_data = [v.model_dump_json() for v in videos if v.title in selected_vids]
     
     from redline.core.config_service import ConfigService
@@ -50,38 +70,61 @@ if st.button("Run Weekly Analysis", type="primary"):
     api_key = config.get("NVIDIA_API_KEY")
     model = config.get("DEFAULT_LLM_MODEL")
     
-    if not api_key or not model:
-        st.error("⚠️ AI Configuration Incomplete. Please set your NVIDIA API Key and Default Model in the Admin Settings.")
-        st.stop()
+    if api_key and model:
+        llm = NVIDIAProvider(api_key, model)
         
-    llm = NVIDIAProvider(api_key, model)
-    
-    prompt_tmpl = load_prompt("05-weekly-analyzer.md")
-    prompt = f"{prompt_tmpl}\n\nDate Range: {start_date} to {end_date}\n\nVideos Data:\n" + "\n---\n".join(selected_data)
-    
-    with st.spinner("Analyzing weekly performance..."):
-        response = llm.generate(prompt)
-        st.session_state.weekly_draft = response["raw_text"]
-        st.session_state.weekly_json = response["parsed_data"]
+        # System prompt for synthesis
+        chat_prompt = f"""You are the Redline Cult OS Brain. 
+        We are doing the Weekly Review for {start_date} to {end_date}.
+        
+        DATA:
+        {selected_data}
+        
+        USER FEEDBACK:
+        {user_input}
+        
+        CONVERSATION SO FAR:
+        {st.session_state.weekly_chat[:-1]}
+        
+        Respond as an expert growth strategist. Acknowledge the user's input and suggest how it affects our 'Rules' or 'Patterns'."""
+        
+        with st.spinner("Synthesizing..."):
+            response = llm.generate(chat_prompt)
+            ai_msg = response["raw_text"]
+            st.session_state.weekly_chat.append({"role": "assistant", "content": ai_msg})
+            st.rerun()
 
-if 'weekly_draft' in st.session_state:
-    st.markdown("### Draft Analysis")
-    st.markdown(st.session_state.weekly_draft)
-    
-    if st.button("Save Weekly Analysis"):
-        analysis_id = f"weekly-{start_date.strftime('%Y-%m-%d')}"
-        data = st.session_state.weekly_json or {}
-        
-        analysis = WeeklyAnalysis(
-            analysis_id=analysis_id,
-            week_start=start_date,
-            week_end=end_date,
-            video_ids=[v.video_id for v in videos if v.title in selected_vids],
-            summary_markdown=st.session_state.weekly_draft,
-            wins=data.get("wins", []),
-            losses=data.get("losses", []),
-            promotion_candidates=data.get("promotion_candidates", {})
-        )
-        analysis_repo.create(analysis)
-        st.success("Weekly Analysis saved!")
-        del st.session_state.weekly_draft
+# 4. Final Conclusion
+if st.session_state.weekly_chat:
+    if st.button("🏁 Conclude & Save Weekly Memory", type="primary", use_container_width=True):
+        with st.spinner("Finalizing memory..."):
+            # Final one-shot to get the structured data based on the WHOLE chat
+            final_prompt = f"""Summarize our entire conversation into a structured Weekly Analysis.
+            
+            HISTORY:
+            {st.session_state.weekly_chat}
+            
+            Return JSON with 'wins' (list), 'losses' (list), 'summary' (markdown)."""
+            
+            config = ConfigService()
+            llm = NVIDIAProvider(config.get("NVIDIA_API_KEY"), config.get("DEFAULT_LLM_MODEL"))
+            res = llm.generate(final_prompt)
+            data = res["parsed_data"] or {}
+            
+            analysis_id = f"weekly-{start_date.strftime('%Y-%m-%d')}"
+            analysis = WeeklyAnalysis(
+                analysis_id=analysis_id,
+                week_start=datetime.combine(start_date, datetime.min.time()),
+                week_end=datetime.combine(end_date, datetime.max.time()),
+                video_ids=[v.video_id for v in videos if v.title in selected_vids],
+                summary_markdown=data.get("summary", res["raw_text"]),
+                wins=data.get("wins", []),
+                losses=data.get("losses", []),
+                promotion_candidates={}
+            )
+            analysis_repo.create(analysis)
+            
+            # CLEAR CHAT
+            st.session_state.weekly_chat = []
+            st.success("Weekly Memory successfully updated! 🏎️💨")
+            st.balloons()
