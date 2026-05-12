@@ -15,7 +15,7 @@ Selected Idea:
 Title: {idea_title}
 Summary: {idea_summary}
 
-Generate a detailed video plan in JSON format.
+Generate the exact markdown block as requested above. Do not output JSON.
 """
         
         response = self.llm.generate(prompt, system_prompt)
@@ -24,9 +24,10 @@ Generate a detailed video plan in JSON format.
         import re
         
         def extract_field(field_name, default=""):
-            match = re.search(r'(?:-\s*)?\*\*?' + field_name + r'\*\*?:\s*(.*?)(?=\n-|\n##|$)', raw_text, re.IGNORECASE | re.DOTALL)
-            if not match:
-                match = re.search(r'-\s*' + field_name + r':\s*(.*?)(?=\n-|\n##|$)', raw_text, re.IGNORECASE | re.DOTALL)
+            # Flexible match for `- field:`, `- **field**:`, `field:`, etc.
+            # Captures everything until the next line that looks like a field or a header.
+            pattern = r'(?:^|\n)\s*(?:-\s*)?\**' + field_name + r'\**\s*:\s*(.*?)(?=\n\s*(?:-\s*)?\**[a-z_]+\**\s*:|\n\s*##|$)'
+            match = re.search(pattern, raw_text, re.IGNORECASE | re.DOTALL)
             return match.group(1).strip() if match else default
 
         hook = extract_field("hook")
@@ -34,14 +35,12 @@ Generate a detailed video plan in JSON format.
         cta = extract_field("cta") or extract_field("loop_strategy")
         
         # Extract beats/shots
-        shot_match = re.search(r'(?:-\s*)?\*\*?shot_sequence\*\*?:\s*\n(.*?)(?=\n-|\n##|$)', raw_text, re.IGNORECASE | re.DOTALL)
-        if not shot_match:
-            shot_match = re.search(r'-\s*shot_sequence:\s*\n(.*?)(?=\n-|\n##|$)', raw_text, re.IGNORECASE | re.DOTALL)
-            
+        shot_raw = extract_field("shot_sequence")
         beats = []
-        if shot_match:
-            lines = shot_match.group(1).strip().split('\n')
-            beats = [line.strip().lstrip('-').lstrip('1234567890.').strip() for line in lines if line.strip()]
+        if shot_raw:
+            # Split by line and remove bullets/numbers
+            lines = shot_raw.split('\n')
+            beats = [re.sub(r'^[\s\-\*\d\.]+ *', '', line).strip() for line in lines if line.strip()]
             
         # Extract notes
         timing = extract_field("timing_notes")

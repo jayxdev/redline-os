@@ -63,12 +63,18 @@ def run_autonomous_agents_ui(idea):
         cap_res = auto.llm.generate(caption_prompt, auto.get_system_context())
         full_response = cap_res["raw_text"]
         
-        cap_match = re.search(r'-\s*(?:primary_caption|Caption):\s*(.*)', full_response, re.IGNORECASE)
-        caption = cap_match.group(1).strip() if cap_match else "See packaging notes."
+        def extract_caption_field(field_name, default=""):
+            pattern = r'(?:^|\n)\s*(?:-\s*)?\**' + field_name + r'\**\s*:\s*(.*?)(?=\n\s*(?:-\s*)?\**[a-z0-9_]+\**\s*:|\n\s*##|$)'
+            match = re.search(pattern, full_response, re.IGNORECASE | re.DOTALL)
+            return match.group(1).strip() if match else default
+
+        caption = extract_caption_field(r"(?:primary_caption|Caption)", "See packaging notes.")
         
-        hash_match = re.search(r'-\s*(?:hashtag_set|Hashtags used):\s*(.*)', full_response, re.IGNORECASE)
-        hashtags_str = hash_match.group(1).strip() if hash_match else ""
-        hashtags = [h.strip() for h in hashtags_str.split(",") if h.strip()]
+        hashtags_str = extract_caption_field(r"(?:hashtag_set|Hashtags used)", "")
+        hashtags = [h.strip() for h in hashtags_str.replace('\n', ' ').split() if h.strip().startswith('#')]
+        if not hashtags and hashtags_str:
+            # Fallback if comma separated without hash symbols
+            hashtags = [f"#{h.strip()}" for h in hashtags_str.split(",") if h.strip()]
         
         video_repo = VideoRepository()
         video_id = f"auto-{datetime.now().strftime('%m%d')}-{idea.idea_id}"
