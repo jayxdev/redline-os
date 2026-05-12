@@ -12,8 +12,8 @@ class PromotionCandidates(BaseModel):
 class WeeklyAnalysis(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     analysis_id: str
-    week_start: date
-    week_end: date
+    week_start: datetime
+    week_end: datetime
     video_ids: List[str] = []
     summary_markdown: str
     wins: List[str] = []
